@@ -1,8 +1,54 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { User, Bell, Shield, Activity, Save, Mail, Smartphone } from 'lucide-react';
+import { api } from '../api';
 
 const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('profile');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+
+  const [profile, setProfile] = useState({
+    nickName: '',
+    title: '',
+    department: '',
+    licenseNo: '',
+    hospital: '',
+    avatar: ''
+  });
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await api.getMe();
+        setProfile({
+          nickName: data.nickName || '',
+          title: data.title || '',
+          department: data.department || '',
+          licenseNo: data.licenseNo || '',
+          hospital: data.hospital || '',
+          avatar: data.avatar || ''
+        });
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  const handleProfileSave = async () => {
+    try {
+      setSaving(true);
+      await api.updateProfile(profile);
+      alert('保存成功');
+    } catch (error) {
+      console.error('Failed to save profile:', error);
+      alert('保存失败');
+    } finally {
+      setSaving(false);
+    }
+  };
 
   // Mock form states
   const [notifications, setNotifications] = useState({
@@ -21,6 +67,8 @@ const Settings: React.FC = () => {
     { id: 'notification', label: '通知消息', icon: Bell },
     { id: 'security', label: '账号安全', icon: Shield },
   ];
+
+  if (loading) return <div className="p-8 text-center text-slate-500">加载中...</div>;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -57,7 +105,7 @@ const Settings: React.FC = () => {
             
             <div className="flex items-center gap-6 pb-6 border-b border-slate-100">
               <div className="w-20 h-20 rounded-full bg-slate-200 overflow-hidden border-2 border-white shadow-md">
-                 <img src="https://ui-avatars.com/api/?name=Dr+Wang&background=0D8ABC&color=fff&size=128" alt="Avatar" className="w-full h-full object-cover" />
+                 <img src={profile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.nickName || '医生')}&background=0D8ABC&color=fff&size=128`} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div>
                 <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
@@ -70,26 +118,30 @@ const Settings: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">姓名</label>
-                <input type="text" defaultValue="王主任" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+                <input type="text" value={profile.nickName} onChange={e => setProfile({...profile, nickName: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">所属医院</label>
+                <input type="text" value={profile.hospital} onChange={e => setProfile({...profile, hospital: e.target.value})} placeholder="例如：南方医科大学珠江医院" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">职称</label>
-                <input type="text" defaultValue="副主任医师" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+                <input type="text" value={profile.title} onChange={e => setProfile({...profile, title: e.target.value})} placeholder="例如：副主任医师" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">所属科室</label>
-                <input type="text" defaultValue="风湿免疫科" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+                <input type="text" value={profile.department} onChange={e => setProfile({...profile, department: e.target.value})} placeholder="例如：风湿免疫科" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">执业证号</label>
-                <input type="text" defaultValue="110110105001234" disabled className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-slate-500 cursor-not-allowed" />
+                <input type="text" value={profile.licenseNo} onChange={e => setProfile({...profile, licenseNo: e.target.value})} placeholder="请输入执业证号" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
               </div>
             </div>
 
             <div className="pt-4 flex justify-end">
-              <button className="flex items-center px-6 py-2.5 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-sm">
+              <button onClick={handleProfileSave} disabled={saving} className="flex items-center px-6 py-2.5 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-sm disabled:opacity-50">
                 <Save size={18} className="mr-2" />
-                保存更改
+                {saving ? '保存中...' : '保存更改'}
               </button>
             </div>
           </div>

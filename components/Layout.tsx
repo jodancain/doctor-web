@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LayoutDashboard, Users, Stethoscope, Settings, Menu, X, Bell, Activity, ClipboardList, ClipboardCheck, FileEdit, Database, ChevronDown, UserCog, Shield, Building2, Award, BookOpen, ChevronUp, LogOut, Check, User } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { api } from '../api';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -18,6 +19,20 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
   // Profile menu state
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [currentOrg, setCurrentOrg] = useState('南方医科大学珠江医院');
+  const [doctorName, setDoctorName] = useState('医生');
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const data = await api.getMe();
+        if (data.nickName) setDoctorName(data.nickName);
+        if (data.hospital) setCurrentOrg(data.hospital);
+      } catch (error) {
+        console.error('Failed to fetch profile:', error);
+      }
+    };
+    fetchProfile();
+  }, []);
   
   const navigate = useNavigate();
 
@@ -238,11 +253,11 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
               }`}
             >
               <div className="relative">
-                <img src="https://ui-avatars.com/api/?name=Dr+Wang&background=0D8ABC&color=fff" alt="User" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
+                <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(doctorName)}&background=0D8ABC&color=fff`} alt="User" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-slate-800 truncate">王主任</p>
+                <p className="text-sm font-bold text-slate-800 truncate">{doctorName}</p>
                 <p className="text-xs text-slate-500 truncate">{currentOrg}</p>
               </div>
               <ChevronUp size={16} className={`text-slate-400 transition-transform ${isProfileMenuOpen ? 'rotate-180' : ''}`} />

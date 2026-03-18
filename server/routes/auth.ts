@@ -103,8 +103,46 @@ router.post('/logout', (req, res) => {
   res.json({ success: true });
 });
 
-router.get('/me', requireAuth, (req: AuthRequest, res: Response) => {
-  res.json(req.user);
+router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const result = await db.collection('users').doc(req.user!.id).get();
+    if (!result.data || result.data.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    const user = result.data[0];
+    // Remove sensitive info
+    const { password, ...safeUser } = user;
+    res.json(safeUser);
+  } catch (error) {
+    logger.error({ error }, 'Get me error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+const updateProfileSchema = z.object({
+  nickName: z.string().optional(),
+  title: z.string().optional(),
+  department: z.string().optional(),
+  licenseNo: z.string().optional(),
+  hospital: z.string().optional(),
+  avatar: z.string().optional(),
+});
+
+router.put('/profile', requireAuth, async (req: AuthRequest, res: Response) => {
+  try {
+    const updateData = updateProfileSchema.parse(req.body);
+    await db.collection('users').doc(req.user!.id).update({
+      ...updateData,
+      updatedAt: new Date()
+    });
+    res.json({ success: true });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
+    logger.error({ error }, 'Update profile error');
+    res.status(500).json({ error: 'Internal server error' });
+  }
 });
 
 export default router;

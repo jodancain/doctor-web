@@ -22,6 +22,16 @@ export const api = {
     return res.json();
   },
 
+  async updateProfile(data: any) {
+    const res = await fetch('/api/auth/profile', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update profile');
+    return res.json();
+  },
+
   async getPatients(params?: { limit?: number; offset?: number; q?: string }) {
     const searchParams = new URLSearchParams();
     if (params?.limit) searchParams.set('limit', params.limit.toString());
