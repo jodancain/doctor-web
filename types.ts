@@ -46,6 +46,19 @@ export interface ResearchProject {
   createDate: string;
 }
 
+export interface QuestionOption {
+  id: string;
+  label: string;
+}
+
+export interface Question {
+  id: string;
+  type: 'single_choice' | 'multiple_choice' | 'text' | 'rating';
+  title: string;
+  options?: QuestionOption[];
+  required: boolean;
+}
+
 export interface Questionnaire {
   id: string;
   title: string;
@@ -54,6 +67,14 @@ export interface Questionnaire {
   status: 'Published' | 'Draft';
   updateDate: string;
   usageCount: number;
+  questions?: Question[];
+}
+
+export interface QuestionnaireAnswer {
+  questionId: string;
+  questionTitle: string;
+  type: 'single_choice' | 'multiple_choice' | 'text' | 'rating';
+  value: string | string[] | number; // text/single -> string, multiple -> string[], rating -> number
 }
 
 export interface QuestionnaireRecord {
@@ -65,4 +86,17 @@ export interface QuestionnaireRecord {
   score?: number; // 如果是量表
   result: string; // 结论简述
   status: 'Completed' | 'Incomplete';
+  answers?: QuestionnaireAnswer[];
+}
+
+export interface PatientTask {
+  id: string;
+  patientId: string;
+  patientName: string;
+  taskType: 'questionnaire';
+  referenceId: string;
+  title: string;
+  status: 'pending' | 'completed';
+  createdAt: string;
+  completedAt?: string;
 }

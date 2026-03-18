@@ -40,7 +40,7 @@ const PatientForm: React.FC = () => {
         targetUricAcid: formData.targetUricAcid,
         medication: formData.medication,
       });
-      navigate(`/patients/${id}`);
+      navigate('/patients');
     } catch (error) {
       console.error('Failed to update patient:', error);
       alert('保存失败，请重试');
@@ -60,10 +60,6 @@ const PatientForm: React.FC = () => {
         <div className="flex items-center text-sm text-slate-500">
           <span className="hover:text-primary-600 cursor-pointer" onClick={() => navigate('/patients')}>
             患者列表
-          </span>
-          <ChevronRight size={14} className="mx-2 text-slate-300" />
-          <span className="hover:text-primary-600 cursor-pointer" onClick={() => navigate(`/patients/${id}`)}>
-            患者详情
           </span>
           <ChevronRight size={14} className="mx-2 text-slate-300" />
           <span className="font-bold text-slate-800">编辑档案</span>
@@ -88,15 +84,6 @@ const PatientForm: React.FC = () => {
                   value={formData.nickName || formData.name || ''}
                   onChange={e => setFormData({...formData, nickName: e.target.value})}
                   className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">患者 ID</label>
-                <input 
-                  type="text" 
-                  value={formData._openid || formData.id || ''}
-                  disabled
-                  className="w-full px-4 py-2.5 bg-slate-100 border border-slate-200 rounded-lg text-slate-500 cursor-not-allowed"
                 />
               </div>
               <div>
@@ -182,7 +169,7 @@ const PatientForm: React.FC = () => {
           {/* Actions */}
           <div className="pt-6 flex gap-4">
             <button 
-              onClick={() => navigate(-1)}
+              onClick={() => navigate('/patients')}
               disabled={saving}
               className="px-6 py-2.5 bg-white border border-slate-300 text-slate-700 rounded-xl font-medium hover:bg-slate-50 transition-colors disabled:opacity-50"
             >

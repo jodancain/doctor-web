@@ -42,6 +42,7 @@ const Settings: React.FC = () => {
       setSaving(true);
       await api.updateProfile(profile);
       alert('保存成功');
+      window.dispatchEvent(new Event('profileUpdated'));
     } catch (error) {
       console.error('Failed to save profile:', error);
       alert('保存失败');

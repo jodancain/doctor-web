@@ -146,19 +146,68 @@ export const MOCK_QUESTIONNAIRES: Questionnaire[] = [
     id: 'Q001',
     title: 'SF-36 生活质量量表',
     type: 'Scale',
-    questionCount: 36,
+    questionCount: 2,
     status: 'Published',
     updateDate: '2024-01-15',
-    usageCount: 128
+    usageCount: 128,
+    questions: [
+      {
+        id: 'q1',
+        type: 'single_choice',
+        title: '总体来说，您认为您目前的健康状况是：',
+        required: true,
+        options: [
+          { id: 'o1', label: '极好' },
+          { id: 'o2', label: '很好' },
+          { id: 'o3', label: '好' },
+          { id: 'o4', label: '一般' },
+          { id: 'o5', label: '差' }
+        ]
+      },
+      {
+        id: 'q2',
+        type: 'single_choice',
+        title: '和一年前相比，您认为您目前的健康状况如何？',
+        required: true,
+        options: [
+          { id: 'o1', label: '比一年前好多了' },
+          { id: 'o2', label: '比一年前好一些' },
+          { id: 'o3', label: '和一年前差不多' },
+          { id: 'o4', label: '比一年前差一些' },
+          { id: 'o5', label: '比一年前差多了' }
+        ]
+      }
+    ]
   },
   {
     id: 'Q002',
     title: '痛风患者饮食习惯调查',
     type: 'Survey',
-    questionCount: 20,
+    questionCount: 2,
     status: 'Published',
     updateDate: '2024-03-01',
-    usageCount: 45
+    usageCount: 45,
+    questions: [
+      {
+        id: 'q1',
+        type: 'multiple_choice',
+        title: '您平时经常食用的肉类有哪些？（多选）',
+        required: true,
+        options: [
+          { id: 'o1', label: '猪肉' },
+          { id: 'o2', label: '牛肉' },
+          { id: 'o3', label: '鸡肉' },
+          { id: 'o4', label: '海鲜' },
+          { id: 'o5', label: '动物内脏' }
+        ]
+      },
+      {
+        id: 'q2',
+        type: 'text',
+        title: '请简述您近期的饮食调整情况：',
+        required: false
+      }
+    ]
   },
   {
     id: 'Q003',
@@ -167,7 +216,15 @@ export const MOCK_QUESTIONNAIRES: Questionnaire[] = [
     questionCount: 1,
     status: 'Draft',
     updateDate: '2024-03-20',
-    usageCount: 0
+    usageCount: 0,
+    questions: [
+      {
+        id: 'q1',
+        type: 'rating',
+        title: '请对您目前的关节疼痛程度进行评分（1-5分）：',
+        required: true
+      }
+    ]
   }
 ];
 
@@ -180,7 +237,11 @@ export const MOCK_QUESTIONNAIRE_RECORDS: QuestionnaireRecord[] = [
     submitDate: '2024-03-10 14:30',
     score: 85,
     result: '生活质量良好',
-    status: 'Completed'
+    status: 'Completed',
+    answers: [
+      { questionId: 'q1', questionTitle: '总体来说，您认为您目前的健康状况是：', type: 'single_choice', value: '很好' },
+      { questionId: 'q2', questionTitle: '和一年前相比，您认为您目前的健康状况如何？', type: 'single_choice', value: '和一年前差不多' }
+    ]
   },
   {
     id: 'R002',
@@ -189,7 +250,11 @@ export const MOCK_QUESTIONNAIRE_RECORDS: QuestionnaireRecord[] = [
     patientId: 'P002',
     submitDate: '2024-03-12 09:15',
     result: '高嘌呤饮食摄入频繁',
-    status: 'Completed'
+    status: 'Completed',
+    answers: [
+      { questionId: 'q1', questionTitle: '您平时经常食用的肉类有哪些？（多选）', type: 'multiple_choice', value: ['猪肉', '海鲜', '动物内脏'] },
+      { questionId: 'q2', questionTitle: '请简述您近期的饮食调整情况：', type: 'text', value: '最近应酬比较多，没怎么控制。' }
+    ]
   },
   {
     id: 'R003',
@@ -199,6 +264,10 @@ export const MOCK_QUESTIONNAIRE_RECORDS: QuestionnaireRecord[] = [
     submitDate: '2024-03-14 10:00',
     score: 42,
     result: '急性发作期，生活受限',
-    status: 'Completed'
+    status: 'Completed',
+    answers: [
+      { questionId: 'q1', questionTitle: '总体来说，您认为您目前的健康状况是：', type: 'single_choice', value: '差' },
+      { questionId: 'q2', questionTitle: '和一年前相比，您认为您目前的健康状况如何？', type: 'single_choice', value: '比一年前差多了' }
+    ]
   }
 ];

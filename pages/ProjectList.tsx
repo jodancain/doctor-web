@@ -1,11 +1,25 @@
-import React, { useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, Search, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { MOCK_PROJECTS } from '../constants';
+import { ResearchProject } from '../types';
 
 const ProjectList: React.FC = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<'mine' | 'all'>('all');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [projects, setProjects] = useState<ResearchProject[]>([]);
+
+  useEffect(() => {
+    const saved = localStorage.getItem('mock_projects');
+    if (saved) {
+      setProjects(JSON.parse(saved));
+    } else {
+      setProjects(MOCK_PROJECTS);
+      localStorage.setItem('mock_projects', JSON.stringify(MOCK_PROJECTS));
+    }
+  }, []);
 
   const getStatusLabel = (status: string) => {
     switch(status) {
@@ -15,6 +29,20 @@ const ProjectList: React.FC = () => {
       default: return status;
     }
   };
+
+  const handleDelete = (id: string) => {
+    if (window.confirm('确定要删除该项目吗？')) {
+      const updated = projects.filter(p => p.id !== id);
+      setProjects(updated);
+      localStorage.setItem('mock_projects', JSON.stringify(updated));
+    }
+  };
+
+  const filteredProjects = projects.filter(p => {
+    const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchStatus = statusFilter ? p.status === statusFilter : true;
+    return matchSearch && matchStatus;
+  });
 
   return (
     <div className="space-y-6">
@@ -49,22 +77,29 @@ const ProjectList: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2 w-full xl:w-auto">
-          <select className="px-3 py-2 bg-white border border-slate-200 rounded-md text-sm text-slate-600 outline-none focus:border-primary-500 min-w-[120px]">
-            <option>请选择</option>
-            <option>进行中</option>
-            <option>设计中</option>
+          <select 
+            value={statusFilter}
+            onChange={e => setStatusFilter(e.target.value)}
+            className="px-3 py-2 bg-white border border-slate-200 rounded-md text-sm text-slate-600 outline-none focus:border-primary-500 min-w-[120px]"
+          >
+            <option value="">所有状态</option>
+            <option value="Recruiting">进行中</option>
+            <option value="Pending">设计中</option>
+            <option value="Completed">已结束</option>
           </select>
           <div className="relative flex-1 xl:w-64">
              <input 
                type="text" 
                placeholder="请输入项目名称" 
+               value={searchTerm}
+               onChange={e => setSearchTerm(e.target.value)}
                className="w-full pl-3 pr-10 py-2 bg-white border border-slate-200 rounded-md text-sm outline-none focus:border-primary-500"
              />
           </div>
-          <button className="px-5 py-2 bg-primary-500 text-white rounded-md text-sm hover:bg-primary-600 transition-colors whitespace-nowrap">
-            查询
-          </button>
-          <button className="px-5 py-2 bg-white border border-slate-200 text-slate-600 rounded-md text-sm hover:bg-slate-50 transition-colors whitespace-nowrap">
+          <button 
+            onClick={() => { setSearchTerm(''); setStatusFilter(''); setFilter('all'); }}
+            className="px-5 py-2 bg-white border border-slate-200 text-slate-600 rounded-md text-sm hover:bg-slate-50 transition-colors whitespace-nowrap"
+          >
             重置
           </button>
         </div>
@@ -77,13 +112,14 @@ const ProjectList: React.FC = () => {
            <div className="col-span-6 md:col-span-2">状态</div>
            <div className="col-span-12 md:col-span-3">项目进度</div>
            <div className="col-span-6 md:col-span-2">项目周期</div>
-           <div className="col-span-12 md:col-span-2">创建时间</div>
+           <div className="col-span-12 md:col-span-1">创建时间</div>
+           <div className="col-span-12 md:col-span-1">操作</div>
          </div>
 
          {/* List Items */}
          <div className="divide-y divide-slate-50">
-           {MOCK_PROJECTS.map((project) => {
-             const percent = Math.round((project.enrolledCount / project.targetCount) * 100);
+           {filteredProjects.length > 0 ? filteredProjects.map((project) => {
+             const percent = project.targetCount > 0 ? Math.round((project.enrolledCount / project.targetCount) * 100) : 0;
              
              return (
                <div key={project.id} className="grid grid-cols-12 gap-4 p-6 items-center text-center text-sm hover:bg-slate-50 transition-colors group">
@@ -93,12 +129,18 @@ const ProjectList: React.FC = () => {
                    <div className="font-medium text-slate-600 group-hover:text-primary-600 transition-colors cursor-pointer truncate" title={project.name}>
                      {project.name}
                    </div>
+                   {project.description && (
+                     <div className="text-xs text-slate-400 mt-1 truncate" title={project.description}>
+                       {project.description}
+                     </div>
+                   )}
                  </div>
 
                  {/* Status */}
                  <div className="col-span-6 md:col-span-2">
                    <span className={`inline-block w-20 py-1 rounded text-xs ${
-                     project.status === 'Recruiting' ? 'text-slate-600' : 'text-slate-500'
+                     project.status === 'Recruiting' ? 'bg-green-50 text-green-600' : 
+                     project.status === 'Completed' ? 'bg-slate-100 text-slate-500' : 'bg-blue-50 text-blue-600'
                    }`}>
                      {getStatusLabel(project.status)}
                    </span>
@@ -107,33 +149,51 @@ const ProjectList: React.FC = () => {
                  {/* Progress */}
                  <div className="col-span-12 md:col-span-3 text-left">
                    <div className="max-w-[240px] mx-auto md:mx-0">
-                     <div className="text-xs text-slate-500 mb-2">目标人数{project.targetCount}人</div>
+                     <div className="text-xs text-slate-500 mb-2 flex justify-between">
+                       <span>目标人数 {project.targetCount} 人</span>
+                       {percent >= 100 && <span className="text-green-600 font-medium">已达标</span>}
+                     </div>
                      <div className="w-full h-3.5 bg-slate-100 rounded-full overflow-hidden mb-2">
                        <div 
-                         style={{width: `${percent}%`}} 
-                         className="h-full bg-primary-500 rounded-full transition-all duration-500 ease-out"
+                         style={{width: `${Math.min(percent, 100)}%`}} 
+                         className={`h-full rounded-full transition-all duration-500 ease-out ${percent >= 100 ? 'bg-green-500' : 'bg-primary-500'}`}
                        ></div>
                      </div>
                      <div className="flex items-baseline gap-2">
                        <span className="text-3xl font-normal text-slate-600">{percent}%</span>
-                       <span className="text-xs text-slate-500">已入组{project.enrolledCount}人</span>
+                       <span className="text-xs text-slate-500">已入组 {project.enrolledCount} 人</span>
                      </div>
                    </div>
                  </div>
 
                  {/* Period */}
                  <div className="col-span-6 md:col-span-2 text-slate-600">
-                   {project.periodValue}{project.periodUnit}
+                   {project.periodValue} {project.periodUnit}
                  </div>
 
                  {/* Date */}
-                 <div className="col-span-12 md:col-span-2 text-slate-500 text-xs">
-                   {project.createDate}
+                 <div className="col-span-12 md:col-span-1 text-slate-500 text-xs">
+                   {project.createDate.split(' ')[0]}
+                 </div>
+
+                 {/* Actions */}
+                 <div className="col-span-12 md:col-span-1 flex justify-center">
+                   <button 
+                     onClick={() => handleDelete(project.id)}
+                     className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                     title="删除项目"
+                   >
+                     <Trash2 size={18} />
+                   </button>
                  </div>
 
                </div>
              );
-           })}
+           }) : (
+             <div className="p-12 text-center text-slate-500">
+               没有找到匹配的科研项目
+             </div>
+           )}
          </div>
       </div>
 
@@ -142,8 +202,7 @@ const ProjectList: React.FC = () => {
          <div className="flex gap-2">
            <button className="px-3 py-1 bg-white border border-slate-200 rounded text-slate-400 text-xs disabled:opacity-50" disabled>上一页</button>
            <button className="px-3 py-1 bg-primary-600 text-white border border-primary-600 rounded text-xs">1</button>
-           <button className="px-3 py-1 bg-white border border-slate-200 rounded text-slate-600 text-xs hover:bg-slate-50">2</button>
-           <button className="px-3 py-1 bg-white border border-slate-200 rounded text-slate-600 text-xs hover:bg-slate-50">下一页</button>
+           <button className="px-3 py-1 bg-white border border-slate-200 rounded text-slate-600 text-xs hover:bg-slate-50 disabled:opacity-50" disabled>下一页</button>
          </div>
       </div>
     </div>

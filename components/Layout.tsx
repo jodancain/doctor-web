@@ -20,6 +20,7 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [currentOrg, setCurrentOrg] = useState('南方医科大学珠江医院');
   const [doctorName, setDoctorName] = useState('医生');
+  const [avatar, setAvatar] = useState('');
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -27,11 +28,15 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
         const data = await api.getMe();
         if (data.nickName) setDoctorName(data.nickName);
         if (data.hospital) setCurrentOrg(data.hospital);
+        if (data.avatar) setAvatar(data.avatar);
       } catch (error) {
         console.error('Failed to fetch profile:', error);
       }
     };
     fetchProfile();
+
+    window.addEventListener('profileUpdated', fetchProfile);
+    return () => window.removeEventListener('profileUpdated', fetchProfile);
   }, []);
   
   const navigate = useNavigate();
@@ -190,9 +195,15 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
 
           <div className="p-4 border-t border-slate-100 relative">
             {isProfileMenuOpen && (
-              <div 
-                className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-fade-in origin-bottom"
-              >
+              <>
+                {/* Invisible overlay for clicking outside */}
+                <div 
+                  className="fixed inset-0 z-40 bg-transparent"
+                  onClick={() => setIsProfileMenuOpen(false)}
+                />
+                <div 
+                  className="absolute bottom-full left-4 right-4 mb-2 bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden z-50 animate-fade-in origin-bottom"
+                >
                  <div className="p-4 bg-slate-50 border-b border-slate-100">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">当前组织</p>
                     <div className="flex items-center gap-2 text-slate-800 font-bold text-sm">
@@ -226,7 +237,10 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
 
                  <div className="p-2">
                    <button 
-                     onClick={() => navigate('/settings')}
+                     onClick={() => {
+                       navigate('/settings');
+                       setIsProfileMenuOpen(false);
+                     }}
                      className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors"
                    >
                      <User size={16} />
@@ -241,6 +255,7 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
                    </button>
                  </div>
               </div>
+              </>
             )}
             
             {/* Clickable Profile Card */}
@@ -253,7 +268,7 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
               }`}
             >
               <div className="relative">
-                <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(doctorName)}&background=0D8ABC&color=fff`} alt="User" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
+                <img src={avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(doctorName)}&background=0D8ABC&color=fff`} alt="User" className="w-10 h-10 rounded-full border-2 border-white shadow-sm" />
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
               </div>
               <div className="flex-1 min-w-0">
@@ -297,12 +312,7 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
       )}
       
       {/* Click outside to close profile menu (Invisible overlay for desktop) */}
-      {isProfileMenuOpen && (
-        <div 
-          className="fixed inset-0 z-40 bg-transparent"
-          onClick={() => setIsProfileMenuOpen(false)}
-        />
-      )}
+      {/* Moved to be inside the relative container to avoid z-index issues */}
     </div>
   );
 };

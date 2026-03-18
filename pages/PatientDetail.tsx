@@ -107,7 +107,7 @@ const PatientDetail: React.FC = () => {
               {patient.nickName || patient.name}
             </h1>
             <p className="text-slate-500 mt-1">
-              {patient.gender === 'Male' ? '男' : patient.gender === 'Female' ? '女' : '未知'} | {patient.age ? `${patient.age}岁` : '--'} | ID: {patient._openid}
+              {patient.gender === 'Male' ? '男' : patient.gender === 'Female' ? '女' : '未知'} | {patient.age ? `${patient.age}岁` : '--'}
             </p>
           </div>
         </div>
@@ -211,8 +211,8 @@ const PatientDetail: React.FC = () => {
                     {activeTab === 'diet' && (
                       <p className="font-bold text-slate-800 flex items-center gap-2">
                         <span className={`w-3 h-3 rounded-full ${
-                          record.color === 'green' ? 'bg-green-500' : 
-                          record.color === 'yellow' ? 'bg-yellow-500' : 'bg-red-500'
+                          (record.color === 'green' || record.color === 'low' || record.purineLevel === 'low') ? 'bg-green-500' : 
+                          (record.color === 'yellow' || record.color === 'medium' || record.purineLevel === 'medium') ? 'bg-yellow-500' : 'bg-red-500'
                         }`}></span>
                         {record.name}
                       </p>

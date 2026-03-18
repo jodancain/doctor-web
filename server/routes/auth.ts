@@ -14,13 +14,13 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 login requests per windowMs
-  message: { error: 'Too many login attempts, please try again later.' },
-});
+// const loginLimiter = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   max: 5, // Limit each IP to 5 login requests per windowMs
+//   message: { error: 'Too many login attempts, please try again later.' },
+// });
 
-router.post('/login', loginLimiter, async (req, res) => {
+router.post('/login', async (req, res) => {
   try {
     const { username, password } = loginSchema.parse(req.body);
 
@@ -85,12 +85,12 @@ router.post('/login', loginLimiter, async (req, res) => {
     });
 
     res.json(payload);
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors[0].message });
-    }
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: (error as any).errors[0].message });
+      }
     logger.error({ error }, 'Login error');
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
 });
 
@@ -110,9 +110,25 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
       return res.status(404).json({ error: 'User not found' });
     }
     const user = result.data[0];
-    // Remove sensitive info
-    const { password, ...safeUser } = user;
-    res.json(safeUser);
+    
+    // Parse org string if it exists to get hospital and department
+    let hospital = user.hospital;
+    let department = user.department;
+    
+    if (user.org && (!hospital || !department)) {
+      const parts = user.org.split(' ');
+      if (!hospital && parts.length > 0) hospital = parts[0];
+      if (!department && parts.length > 1) department = parts[1];
+    }
+
+    // Remove sensitive info and map fields
+    const { password, name, ...safeUser } = user;
+    res.json({
+      ...safeUser,
+      nickName: user.nickName || name || user.username,
+      hospital: hospital || '',
+      department: department || '',
+    });
   } catch (error) {
     logger.error({ error }, 'Get me error');
     res.status(500).json({ error: 'Internal server error' });
@@ -121,6 +137,7 @@ router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
 
 const updateProfileSchema = z.object({
   nickName: z.string().optional(),
+  name: z.string().optional(),
   title: z.string().optional(),
   department: z.string().optional(),
   licenseNo: z.string().optional(),
@@ -131,15 +148,33 @@ const updateProfileSchema = z.object({
 router.put('/profile', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const updateData = updateProfileSchema.parse(req.body);
+    
+    // Also update the org string if hospital or department changes
+    let orgUpdate = {};
+    if (updateData.hospital || updateData.department) {
+      const userResult = await db.collection('users').doc(req.user!.id).get();
+      const user = userResult.data[0];
+      
+      const currentHospital = updateData.hospital || user.hospital || (user.org ? user.org.split(' ')[0] : '');
+      const currentDept = updateData.department || user.department || (user.org ? user.org.split(' ')[1] : '');
+      
+      orgUpdate = {
+        org: `${currentHospital} ${currentDept}`.trim()
+      };
+    }
+
     await db.collection('users').doc(req.user!.id).update({
       ...updateData,
+      ...orgUpdate,
+      // If nickName is updated, also update name for backward compatibility
+      ...(updateData.nickName ? { name: updateData.nickName } : {}),
       updatedAt: new Date()
     });
     res.json({ success: true });
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      return res.status(400).json({ error: error.errors[0].message });
-    }
+    } catch (error: any) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ error: (error as any).errors[0].message });
+      }
     logger.error({ error }, 'Update profile error');
     res.status(500).json({ error: 'Internal server error' });
   }
