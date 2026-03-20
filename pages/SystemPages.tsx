@@ -168,9 +168,12 @@ const SystemPagePlaceholder: React.FC<SystemPageProps> = ({ title, type }) => {
   );
 };
 
-export const UserManagement = () => <SystemPagePlaceholder title="用户管理" type="users" />;
+import UserManagementComponent from './UserManagement';
+import EducationManagementComponent from './EducationManagement';
+
+export const UserManagement = () => <UserManagementComponent />;
 export const RoleManagement = () => <SystemPagePlaceholder title="角色管理" type="roles" />;
 export const OrgManagement = () => <SystemPagePlaceholder title="组织管理" type="orgs" />;
 export const TitleManagement = () => <SystemPagePlaceholder title="职称管理" type="titles" />;
 export const ResourceManagement = () => <SystemPagePlaceholder title="资源管理" type="resources" />;
-export const EducationManagement = () => <SystemPagePlaceholder title="医院宣教" type="education" />;
+export const EducationManagement = () => <EducationManagementComponent />;

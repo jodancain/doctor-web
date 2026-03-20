@@ -97,5 +97,52 @@ export const api = {
     const res = await fetch('/api/patients/dashboard/stats');
     if (!res.ok) throw new Error('Failed to fetch dashboard stats');
     return res.json();
+  },
+
+  // Education Articles (Hospital Knowledge Base)
+  async getEducationArticles(params?: { limit?: number; offset?: number; category?: string; q?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    if (params?.category) searchParams.set('category', params.category);
+    if (params?.q) searchParams.set('q', params.q);
+
+    const res = await fetch(`/api/education?${searchParams.toString()}`);
+    if (!res.ok) throw new Error('Failed to fetch education articles');
+    return res.json();
+  },
+
+  async getEducationArticle(id: string) {
+    const res = await fetch(`/api/education/${id}`);
+    if (!res.ok) throw new Error('Failed to fetch article');
+    return res.json();
+  },
+
+  async createEducationArticle(data: any) {
+    const res = await fetch('/api/education', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to create article');
+    return res.json();
+  },
+
+  async updateEducationArticle(id: string, data: any) {
+    const res = await fetch(`/api/education/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Failed to update article');
+    return res.json();
+  },
+
+  async deleteEducationArticle(id: string) {
+    const res = await fetch(`/api/education/${id}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error('Failed to delete article');
+    return res.json();
   }
 };

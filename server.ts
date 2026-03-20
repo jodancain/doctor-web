@@ -6,6 +6,7 @@ import { pinoHttp } from 'pino-http';
 import { logger } from './server/logger';
 import authRoutes from './server/routes/auth';
 import patientRoutes from './server/routes/patients';
+import educationRoutes from './server/routes/education';
 import path from 'path';
 
 async function startServer() {
@@ -19,6 +20,7 @@ async function startServer() {
   // API Routes
   app.use('/api/auth', authRoutes);
   app.use('/api/patients', patientRoutes);
+  app.use('/api/education', educationRoutes);
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {
