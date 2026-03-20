@@ -74,13 +74,23 @@ router.post('/login', async (req, res) => {
 
     const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '1d' });
 
+    // Cookie 安全属性需要和部署协议匹配：
+    // - 不是 HTTPS 时，secure=true 的 cookie 会被浏览器拒绝写入，后续接口就会拿不到 token。
+    // - HTTPS/跨站场景下，为了让浏览器带 cookie，需要 sameSite=None + secure=true。
+    const xForwardedProto = String(req.headers['x-forwarded-proto'] || '');
+    const cookieSecureEnv = process.env.COOKIE_SECURE;
+    const isSecure =
+      cookieSecureEnv === undefined
+        ? req.secure || xForwardedProto.includes('https')
+        : cookieSecureEnv === 'true' || cookieSecureEnv === '1';
+    const sameSite = (isSecure ? 'none' : 'lax') as const;
+
     // Set httpOnly cookie
     // Why httpOnly? It prevents client-side scripts (XSS) from accessing the token.
-    // In AI Studio preview (iframe), SameSite=None and Secure=true are REQUIRED.
     res.cookie('token', token, {
       httpOnly: true,
-      secure: true,
-      sameSite: 'none',
+      secure: isSecure,
+      sameSite,
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
 
@@ -95,10 +105,18 @@ router.post('/login', async (req, res) => {
 });
 
 router.post('/logout', (req, res) => {
+  const xForwardedProto = String(req.headers['x-forwarded-proto'] || '');
+  const cookieSecureEnv = process.env.COOKIE_SECURE;
+  const isSecure =
+    cookieSecureEnv === undefined
+      ? req.secure || xForwardedProto.includes('https')
+      : cookieSecureEnv === 'true' || cookieSecureEnv === '1';
+  const sameSite = (isSecure ? 'none' : 'lax') as const;
+
   res.clearCookie('token', {
     httpOnly: true,
-    secure: true,
-    sameSite: 'none',
+    secure: isSecure,
+    sameSite,
   });
   res.json({ success: true });
 });

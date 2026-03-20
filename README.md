@@ -20,6 +20,14 @@
 *   [文章编辑器白屏Debug日志 (DEBUG_ARTICLE_EDITOR.md)](./DEBUG_ARTICLE_EDITOR.md)
 *   [部署指南 (DEPLOY_GUIDE.md)](./DEPLOY_GUIDE.md)
 
+## 故障排查：医生端“登录后所有数据访问不了”
+如果医生登录后患者列表/教育内容等都显示空数据，且控制台/页面提示类似 `Permission denied` 或接口请求失败，最常见原因是鉴权 cookie 没有成功写入浏览器。
+
+常见原因与处理方式：
+1. 部署不是严格 HTTPS：后端 cookie 使用 `secure` 属性时，浏览器会拒绝写入。检查并调整环境变量 `COOKIE_SECURE`（必要时改为 `false`）。
+2. 反向代理未正确透传协议：例如未正确设置 `X-Forwarded-Proto`，导致后端误判协议类型。请确保透传 `https`。
+3. 重新登录：清理旧 cookie 后重新登录，确保新 cookie 生效。
+
 ## Run Locally
 
 **Prerequisites:**  Node.js

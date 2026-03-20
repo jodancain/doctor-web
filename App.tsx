@@ -49,7 +49,13 @@ function App() {
   }, []);
 
   const handleLogin = () => {
-    setIsAuthenticated(true);
+    // 登录成功后不直接放行，而是二次校验服务端 cookie 鉴权是否生效
+    api.getMe()
+      .then(() => setIsAuthenticated(true))
+      .catch((err) => {
+        console.error('Auth check after login failed:', err);
+        setIsAuthenticated(false);
+      });
   };
 
   const handleLogout = async () => {
