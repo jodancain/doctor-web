@@ -13,7 +13,7 @@
         <text class="time">{{article.publishTime}}</text>
         <view class="stats">
           <text class="views">👁 {{article.views}}</text>
-          <text class="read-time">🕒 {{article.readTime}}</text>
+          <text class="read-time">🕒 {{article.readTime}}分钟</text>
         </view>
       </view>
     </view>
@@ -23,7 +23,10 @@
 
     <!-- 正文内容 (Rich Text) -->
     <view class="article-body">
-      <rich-text nodes="{{article.content}}"></rich-text>
+      <rich-text wx:if="{{article.content}}" nodes="{{article.content}}"></rich-text>
+      <view wx:else class="empty-content">
+        <text>暂无内容</text>
+      </view>
     </view>
 
     <!-- 底部相关推荐 -->
@@ -59,4 +62,10 @@
 <view class="loading-state" wx:if="{{loading}}">
   <view class="spinner"></view>
   <text>正在加载...</text>
+</view>
+
+<view class="error-state" wx:if="{{!loading && !article}}">
+  <text class="error-icon">😔</text>
+  <text class="error-text">文章加载失败或不存在</text>
+  <view class="retry-btn" bindtap="onRetry">重新加载</view>
 </view>

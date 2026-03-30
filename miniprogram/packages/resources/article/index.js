@@ -4,7 +4,8 @@ Page({
   data: {
     article: null,
     relatedArticles: [],
-    loading: true
+    loading: true,
+    articleId: null
   },
 
   isPublishedArticle(article) {
@@ -19,10 +20,19 @@ Page({
   onLoad(options) {
     const id = options.id;
     if (id) {
+      this.setData({ articleId: id });
       this.fetchArticleDetail(id);
     } else {
       wx.showToast({ title: '参数错误', icon: 'none' });
       setTimeout(() => wx.navigateBack(), 1500);
+    }
+  },
+
+  onRetry() {
+    const id = this.data.articleId;
+    if (id) {
+      this.setData({ loading: true, article: null });
+      this.fetchArticleDetail(id);
     }
   },
 

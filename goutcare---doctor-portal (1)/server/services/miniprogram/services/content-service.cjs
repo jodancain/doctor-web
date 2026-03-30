@@ -128,11 +128,22 @@ async function listArticles(context) {
   try {
     let query = db.collection('education_articles');
 
-    if (category && excludeId) {
-      // 相关推荐：同分类且排除当前文章
-      query = query.where({ category, _id: db.command.neq(excludeId) });
-    } else if (category) {
-      query = query.where({ category });
+    // 构建查询条件
+    const conditions = {};
+
+    // 分类过滤
+    if (category) {
+      conditions.category = category;
+    }
+
+    // 排除指定文章（相关推荐场景）
+    if (excludeId) {
+      // 同时排除字符串和 ObjectId 格式，避免类型不匹配导致排除失败
+      conditions._id = db.command.nin([excludeId]);
+    }
+
+    if (Object.keys(conditions).length > 0) {
+      query = query.where(conditions);
     }
 
     const { data } = await query
@@ -140,7 +151,17 @@ async function listArticles(context) {
       .limit(Number(limit))
       .get();
 
-    return success(data || []);
+    // 服务端过滤：只返回已发布的文章（兼容旧数据中缺少 status 或不同状态值写法）
+    const published = (data || []).filter(item => {
+      const status = item.status;
+      // 旧数据可能没有 status 字段，默认视为已发布
+      if (status === undefined || status === null || status === '') return true;
+      if (typeof status === 'boolean') return status;
+      const normalized = String(status).trim().toLowerCase();
+      return ['已发布', '发布', 'published', 'online', '1', 'true'].includes(normalized);
+    });
+
+    return success(published);
   } catch (err) {
     console.error('[ContentService] listArticles error:', err);
     return error(500, err.message);

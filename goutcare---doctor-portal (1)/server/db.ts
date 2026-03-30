@@ -40,7 +40,30 @@ class Collection {
   ) {}
   
   where(q: any) {
-    return new Collection(this.name, { ...this.query, ...q }, this._limit, this._skip, this._orderBy, this._field);
+    const processed = { ...q };
+    // 自动处理 _id 查询中的字符串与 ObjectId 双格式匹配
+    if (processed._id !== undefined) {
+      const idVal = processed._id;
+      if (idVal && typeof idVal === 'object') {
+        // 处理 $nin / $ne 等操作符中的字符串 ID
+        if (Array.isArray(idVal.$nin)) {
+          const expanded: any[] = [];
+          for (const v of idVal.$nin) {
+            expanded.push(v);
+            if (typeof v === 'string' && v.length === 24 && /^[0-9a-fA-F]{24}$/.test(v)) {
+              expanded.push(new ObjectId(v));
+            }
+          }
+          processed._id = { $nin: expanded };
+        } else if (idVal.$ne !== undefined && typeof idVal.$ne === 'string') {
+          const neStr = idVal.$ne;
+          if (neStr.length === 24 && /^[0-9a-fA-F]{24}$/.test(neStr)) {
+            processed._id = { $nin: [neStr, new ObjectId(neStr)] };
+          }
+        }
+      }
+    }
+    return new Collection(this.name, { ...this.query, ...processed }, this._limit, this._skip, this._orderBy, this._field);
   }
   
   doc(id: any) {

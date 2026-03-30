@@ -60,6 +60,7 @@ Page({
       });
     } catch (err) {
       console.error('Failed to fetch articles:', err);
+      this.setData({ loading: false });
       wx.hideLoading();
       wx.showToast({ title: '获取数据失败', icon: 'none' });
     }
