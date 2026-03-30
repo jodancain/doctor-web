@@ -1,0 +1,96 @@
+<view class="container bg-slate-100 min-h-screen pb-20">
+  <!-- Header -->
+  <view class="bg-teal-600 w-full p-6 pb-12 rounded-b-3xl shadow-lg relative">
+    <view class="flex justify-between items-center mb-6">
+      <view class="flex items-center space-x-3">
+        <view class="w-10 h-10 rounded-full bg-teal-500 flex items-center justify-center text-white font-bold border-2 border-teal-400">
+          患
+        </view>
+        <view>
+          <view class="text-white font-bold text-lg">张三</view>
+          <view class="text-teal-200 text-xs">痛风病程 3年</view>
+        </view>
+      </view>
+      <view class="bg-teal-700 p-2 rounded-full" bindtap="onSwitchRole">
+        <text class="text-white text-xs">切换角色</text>
+      </view>
+    </view>
+
+    <!-- UA Card -->
+    <view class="bg-white rounded-2xl p-4 shadow-xl mx-auto w-full relative z-10">
+      <view class="flex justify-between items-center mb-2">
+        <text class="text-slate-500 text-sm font-medium">当前尿酸值</text>
+        <view class="px-2 py-1 rounded-full text-xs font-bold {{uaStatus === 'Normal' ? 'bg-emerald-100 text-emerald-700' : uaStatus === 'High' ? 'bg-amber-100 text-amber-700' : 'bg-rose-100 text-rose-700'}}">
+          {{uaStatus === 'Normal' ? '正常' : uaStatus === 'High' ? '偏高' : '危险'}}
+        </view>
+      </view>
+      <view class="flex items-baseline space-x-1">
+        <text class="text-4xl font-bold text-slate-800">{{uaLevel}}</text>
+        <text class="text-slate-400 text-sm">µmol/L</text>
+      </view>
+      <view class="mt-4 flex space-x-3">
+        <button class="flex-1 bg-teal-600 text-white text-sm font-bold py-2 rounded-lg shadow-md active:scale-95 transition-all" bindtap="onTapLogUA">
+          记录尿酸
+        </button>
+        <button class="flex-1 bg-rose-50 text-rose-600 border border-rose-200 text-sm font-bold py-2 rounded-lg active:scale-95 transition-all" bindtap="onTapLogAttack">
+          记录发作
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- Quick Actions -->
+  <view class="grid grid-cols-2 gap-4 px-6 mt-16 mb-6">
+    <view class="bg-white p-4 rounded-2xl shadow-sm active:scale-95 transition-all" bindtap="onTapDiet">
+      <view class="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center mb-3 text-orange-600">
+        🍽️
+      </view>
+      <view class="font-bold text-slate-800">饮食记录</view>
+      <view class="text-xs text-slate-400 mt-1">今日已摄入 1200 kcal</view>
+    </view>
+    <view class="bg-white p-4 rounded-2xl shadow-sm active:scale-95 transition-all" bindtap="onTapWater">
+      <view class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center mb-3 text-blue-600">
+        💧
+      </view>
+      <view class="font-bold text-slate-800">饮水打卡</view>
+      <view class="text-xs text-slate-400 mt-1">{{todayWater}}/{{waterGoal}} ml</view>
+    </view>
+  </view>
+
+  <!-- Daily Tasks -->
+  <view class="px-6 mb-6">
+    <view class="text-lg font-bold text-slate-800 mb-3">今日任务</view>
+    <view class="space-y-3">
+      <block wx:for="{{tasks}}" wx:key="id">
+        <view class="bg-white p-3 rounded-xl flex items-center justify-between shadow-sm">
+          <view class="flex items-center space-x-3">
+            <view class="w-5 h-5 rounded-full border-2 flex items-center justify-center {{item.completed ? 'bg-teal-500 border-teal-500' : 'border-slate-300'}}">
+              <text wx:if="{{item.completed}}" class="text-white text-xs">✓</text>
+            </view>
+            <text class="{{item.completed ? 'text-slate-400 line-through' : 'text-slate-700'}}">{{item.title}}</text>
+          </view>
+          <text class="text-xs font-bold text-amber-500">+{{item.points}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- Recommended Articles -->
+  <view class="px-6 mb-6">
+    <view class="text-lg font-bold text-slate-800 mb-3">每日科普</view>
+    <view class="space-y-4">
+      <block wx:for="{{articles}}" wx:key="id">
+        <view class="bg-white rounded-xl overflow-hidden shadow-sm flex" bindtap="onTapArticle" data-id="{{item.id}}">
+          <image src="{{item.imageUrl}}" mode="aspectFill" class="w-24 h-24 bg-slate-200"></image>
+          <view class="p-3 flex-1 flex flex-col justify-between">
+            <view class="font-bold text-slate-800 text-sm line-clamp-2">{{item.title}}</view>
+            <view class="flex justify-between items-center text-xs text-slate-400">
+              <text class="bg-slate-100 px-2 py-0.5 rounded">{{item.category}}</text>
+              <text>{{item.readTime}}</text>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

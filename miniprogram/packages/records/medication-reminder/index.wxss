@@ -1,0 +1,320 @@
+/* 页面容器 */
+.page-container {
+  padding: 32rpx;
+  background-color: #F6F8FA;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding-bottom: 120rpx; /* 为底部提示留出空间 */
+}
+
+.section-header {
+  margin-bottom: 32rpx;
+}
+
+.section-header .title {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #111827; /* 深黑色标题 */
+}
+
+/* 药物卡片 */
+.med-card {
+  background: #FFFFFF;
+  border-radius: 32rpx; /* 更圆润的卡片 */
+  padding: 40rpx 32rpx; /* 增加垂直内边距 */
+  margin-bottom: 24rpx;
+  box-shadow: 0 4rpx 20rpx rgba(0, 0, 0, 0.03); /* 更柔和的阴影 */
+  display: flex;
+  align-items: flex-start; /* 改为顶部对齐，允许内容自然换行 */
+}
+
+.med-icon-box {
+  width: 96rpx; /* 稍微调大图标区域 */
+  height: 96rpx;
+  border-radius: 24rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 32rpx; /* 增加图标与文字间距 */
+  flex-shrink: 0; /* 防止图标被压缩 */
+}
+
+.med-icon {
+  width: 56rpx;
+  height: 56rpx;
+}
+
+/* 图标背景色 - 调整为更接近设计的颜色 */
+.pill-bg {
+  background: #F3F4F6; /* 灰色底 */
+}
+
+.capsule-bg {
+  background: #F3E8FF; /* 淡紫色底 */
+}
+
+.med-info {
+  flex: 1;
+  min-width: 0; /* 允许 flex 子元素缩小 */
+  display: flex;
+  flex-direction: column;
+}
+
+.med-name {
+  font-size: 36rpx; /* 加大字号 */
+  font-weight: 700; /* 更粗的字体 */
+  color: #374151;
+  margin-bottom: 12rpx; /* 增加名称与描述间距 */
+  letter-spacing: 1rpx; /* 增加字间距 */
+  word-break: break-all; /* 长文本自动换行 */
+  line-height: 1.4;
+}
+
+.med-desc {
+  font-size: 26rpx;
+  color: #6B7280;
+  line-height: 1.6; /* 增加行高，提升可读性 */
+  word-break: break-all; /* 允许长文本自动换行 */
+  word-wrap: break-word; /* 处理超长单词 */
+  display: flex;
+  flex-wrap: wrap; /* 允许子元素换行 */
+  align-items: baseline;
+}
+
+.desc-item {
+  white-space: nowrap; /* 单个项不换行 */
+}
+
+.desc-sep {
+  margin: 0 4rpx; /* 分隔符间距 */
+  white-space: nowrap;
+}
+
+/* 动作区 */
+.med-action {
+  margin-left: 16rpx;
+  flex-shrink: 0; /* 防止按钮被压缩 */
+  align-self: center; /* 垂直居中 */
+}
+
+/* 打卡按钮 */
+.clock-in-btn {
+  background: #059669; /* 更深一点的绿色，增加质感 */
+  color: white;
+  font-size: 28rpx; /* 加大按钮文字 */
+  font-weight: 600;
+  padding: 16rpx 48rpx; /* 增加按钮尺寸 */
+  border-radius: 48rpx; /* 胶囊形状 */
+  line-height: 1.5;
+  margin: 0;
+  min-width: auto;
+  white-space: nowrap; /* 按钮文字不换行 */
+  box-shadow: 0 4rpx 12rpx rgba(5, 150, 105, 0.25); /* 绿色阴影 */
+}
+
+.clock-in-btn:active {
+  opacity: 0.9;
+  transform: scale(0.98);
+}
+
+/* 已服用状态 */
+.status-taken {
+  display: flex;
+  align-items: center;
+  color: #9CA3AF;
+  font-size: 26rpx;
+  white-space: nowrap;
+}
+
+.check-icon {
+  font-size: 24rpx; /* 稍微调小勾勾 */
+  margin-right: 8rpx;
+  border: 3rpx solid #D1D5DB; /* 加粗边框 */
+  border-radius: 50%;
+  width: 32rpx;
+  height: 32rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #9CA3AF;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* 添加按钮 (虚线) */
+.add-btn-container {
+  margin-top: 40rpx;
+  margin-bottom: 24rpx;
+}
+
+.add-btn-dashed {
+  border: 3rpx dashed #D1D5DB; /* 加粗虚线 */
+  border-radius: 48rpx;
+  height: 100rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4B5563;
+  font-size: 30rpx;
+  font-weight: 500;
+  background: #FFFFFF; /* 或透明 */
+}
+
+.add-btn-dashed .plus {
+  font-size: 40rpx;
+  margin-right: 12rpx;
+  font-weight: 300;
+  margin-top: -6rpx;
+}
+
+.add-btn-dashed:active {
+  background: #F9FAFB;
+}
+
+/* 使用提醒 */
+.usage-tip {
+  text-align: center;
+  padding: 24rpx 0;
+  margin-top: 16rpx;
+}
+
+.tip-text {
+  font-size: 24rpx;
+  color: #9CA3AF;
+  line-height: 1.6;
+  display: inline-block;
+}
+
+/* 空状态 */
+.empty-state {
+  text-align: center;
+  padding: 60rpx 0;
+  color: #9CA3AF;
+  font-size: 28rpx;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.empty-hint {
+  font-size: 24rpx;
+  color: #D1D5DB;
+  margin-top: 16rpx;
+}
+
+/* 弹窗样式 (重构优化) */
+.add-modal {
+  padding: 48rpx 40rpx;
+  padding-bottom: 80rpx;
+  background: #fff;
+  border-top-left-radius: 32rpx;
+  border-top-right-radius: 32rpx;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 56rpx;
+  padding-bottom: 24rpx;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+
+.modal-header text {
+  font-size: 38rpx;
+  font-weight: 700;
+  color: #1F2937;
+  letter-spacing: 1rpx;
+}
+
+.close-icon {
+  font-size: 48rpx;
+  color: #9CA3AF;
+  padding: 10rpx;
+  line-height: 1;
+  width: 60rpx;
+  height: 60rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-icon:active {
+  background: #F9FAFB;
+  border-radius: 50%;
+}
+
+.input-group {
+  margin-bottom: 48rpx; /* 增加组间距 */
+}
+
+.input-group .label {
+  display: block;
+  font-size: 30rpx; /* 加大标签字号 */
+  color: #374151; /* 更深色，更易读 */
+  margin-bottom: 20rpx; /* 增加标签与输入框间距 */
+  font-weight: 600;
+  letter-spacing: 0.5rpx;
+}
+
+.input-group .input {
+  background: #F9FAFB;
+  border: 2rpx solid #E5E7EB;
+  padding: 32rpx 36rpx; /* 增加内边距，让输入更舒适 */
+  border-radius: 24rpx; /* 更大的圆角 */
+  font-size: 34rpx; /* 加大输入文字字号 */
+  color: #1F2937;
+  height: auto;
+  line-height: 1.6;
+  min-height: 88rpx; /* 确保输入框高度足够 */
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.input-group .input:focus {
+  border-color: #10B981;
+  background: #FFFFFF;
+}
+
+.input-placeholder {
+  color: #9CA3AF;
+  font-size: 32rpx; /* 加大占位符字号 */
+}
+
+/* 删除按钮 */
+.delete-btn {
+  background: #FFFFFF;
+  color: #EF4444;
+  border: 2rpx solid #FEE2E2;
+  border-radius: 24rpx;
+  font-size: 30rpx;
+  font-weight: 500;
+  margin-top: 32rpx;
+  height: 88rpx;
+  line-height: 88rpx;
+  width: 100%;
+}
+
+.delete-btn:active {
+  background: #FEF2F2;
+  border-color: #EF4444;
+}
+
+.submit-btn {
+  background: #10B981;
+  color: white;
+  border-radius: 56rpx;
+  font-size: 36rpx; /* 加大按钮文字 */
+  font-weight: 600;
+  margin-top: 48rpx; /* 增加与删除按钮间距 */
+  height: 108rpx; /* 加大按钮高度 */
+  line-height: 108rpx;
+  box-shadow: 0 8rpx 20rpx rgba(16, 185, 129, 0.25);
+  letter-spacing: 1rpx;
+  width: 100%;
+}
+
+.submit-btn:active {
+  opacity: 0.95;
+  transform: scale(0.99);
+}

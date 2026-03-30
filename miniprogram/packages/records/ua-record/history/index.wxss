@@ -1,0 +1,172 @@
+.page {
+  min-height: 100vh;
+  background-color: #F6F8FA;
+  padding: 32rpx;
+}
+
+.header-section {
+  margin-bottom: 32rpx;
+  text-align: center;
+}
+
+.header-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8rpx;
+}
+
+.header-subtitle {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.record-list {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.02);
+}
+
+.record-item {
+  display: flex;
+  position: relative;
+  padding: 32rpx;
+  padding-left: 48rpx;
+  border-bottom: 1rpx solid #F3F4F6;
+}
+
+.record-item:last-child {
+  border-bottom: none;
+}
+
+.status-bar {
+  position: absolute;
+  left: 24rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 6rpx;
+  height: 60%;
+  border-radius: 3rpx;
+}
+
+.status-bar.normal {
+  background: #10B981;
+}
+
+.status-bar.high {
+  background: #F59E0B;
+}
+
+.record-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.left {
+  flex: 1;
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.date {
+  font-size: 30rpx;
+  color: #1F2937;
+  font-weight: 500;
+}
+
+.separator {
+  margin: 0 12rpx;
+  color: #D1D5DB;
+  font-size: 20rpx;
+}
+
+.time {
+  font-size: 26rpx;
+  color: #9CA3AF;
+}
+
+.remark-row {
+  margin-top: 8rpx;
+}
+
+.tag {
+  font-size: 22rpx;
+  color: #6B7280;
+  background: #F3F4F6;
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+}
+
+.right {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.value-row {
+  display: flex;
+  align-items: baseline;
+  margin-bottom: 12rpx;
+}
+
+.value {
+  font-size: 48rpx;
+  font-weight: 700;
+  margin-right: 8rpx;
+  font-family: 'DIN Alternate', sans-serif;
+}
+
+.value.normal {
+  color: #10B981;
+}
+
+.value.high {
+  color: #F59E0B;
+}
+
+.unit {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.status-badge {
+  font-size: 22rpx;
+  padding: 6rpx 20rpx;
+  border-radius: 20rpx;
+  font-weight: 500;
+}
+
+.status-badge.normal {
+  background: #ECFDF5;
+  color: #059669;
+}
+
+.status-badge.high {
+  background: #FFFBEB;
+  color: #D97706;
+}
+
+.empty-state {
+  padding: 120rpx 32rpx;
+  text-align: center;
+}
+
+.empty-state text {
+  display: block;
+  font-size: 28rpx;
+  color: #9CA3AF;
+  margin-bottom: 16rpx;
+}
+
+.empty-hint {
+  font-size: 24rpx;
+  color: #D1D5DB;
+}

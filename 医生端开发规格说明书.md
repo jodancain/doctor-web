@@ -1,0 +1,172 @@
+# 痛风管家 Pro (医生端) - 微信小程序开发规格说明书
+
+## 1. 项目概述
+本项目旨在将“痛风管家 Pro”医生端 Web 应用移植为微信小程序。
+核心目标是为医生提供一个便捷的移动工作台，用于管理痛风患者的慢病数据、查看电子病历、处理高危预警及进行医患沟通。
+
+**技术栈建议**:
+*   **框架**: 微信小程序原生 (WXML/WXSS/TS) 或 Uni-app (Vue3/TS)。
+*   **UI库**: WeUI 或 TDesign (移动端)。
+*   **图表库**: F2 或 ECharts for Weixin。
+*   **API**: 微信云开发 (CloudBase) 或 HTTPS RESTful API。
+
+---
+
+## 2. 信息架构 (Information Architecture)
+
+### 2.1 底部导航栏 (TabBar)
+1.  **工作台 (Workbench)**: `pages/tabbar/home/index` - 核心数据概览与待办。
+2.  **患者 (Patients)**: `pages/tabbar/patient/index` - 患者列表与搜索管理。
+3.  **消息 (Messages)**: `pages/tabbar/message/index` - 医患沟通列表。
+4.  **我的 (Profile)**: `pages/tabbar/profile/index` - 个人设置与排班。
+
+---
+
+## 3. 详细页面设计
+
+### 3.1 工作台 (Home)
+**路径**: `pages/tabbar/home/index`
+
+*   **顶部栏**:
+    *   左侧：医生头像 + 姓名 + 科室/职称。
+    *   右侧：通知铃铛 (带红点 Badge)。
+*   **核心数据卡片 (Grid Layout)**:
+    *   **患者总数**: 数字展示。
+    *   **达标率**: 百分比 + 环形进度条 (Canvas) + 较上月趋势 (↑/↓)。
+    *   **高危预警**: 红色背景卡片，点击跳转至 `pages/patient/alerts`。
+    *   **近期活跃**: 数字展示。
+*   **待办事项 (List)**:
+    *   标题：“待办事项” + 数量。
+    *   列表项：
+        *   左边框颜色区分优先级 (红=紧急, 绿=普通)。
+        *   内容：任务标题 (如“审核化验单”)、患者姓名、截止时间。
+        *   操作：右侧“处理”按钮。
+
+### 3.2 患者管理 (Patient List)
+**路径**: `pages/tabbar/patient/index`
+
+*   **搜索与筛选 (Sticky Header)**:
+    *   搜索框：支持姓名、ID搜索 (使用 `<input confirm-type="search" />`)。
+    *   筛选标签 (Scroll View)：全部、高危 (Critical)、未达标 (High)、近期活跃。
+*   **患者列表 (Scroll View + Pull Down Refresh)**:
+    *   **卡片样式**:
+        *   左侧：头像 (Avatar)。
+        *   中间：姓名 | 性别 | 年龄。
+        *   下行：UA数值 (高亮显示) | 上次就诊时间。
+        *   右侧：状态标签 (Chip) + 预警图标 (Alert Icon)。
+    *   **交互**: 点击卡片跳转至 `pages/patient/detail?id={id}`。
+
+### 3.3 患者详情 (Patient Detail)
+**路径**: `pages/patient/detail`
+
+*   **患者画像卡片**:
+    *   展示姓名、性别、年龄、BMI、主要诊断。
+    *   **操作栏**: 发消息 (跳转聊天)、打电话 (调用 `wx.makePhoneCall`)。
+*   **核心指标 (Dashboard)**:
+    *   尿酸值 (Current UA) vs 目标值 (Target UA)。
+    *   **趋势图**: 使用 ECharts 绘制近5次尿酸变化折线图。
+*   **功能标签页 (Tabs)**:
+    *   **概览**: 显示当前用药、依从性标签。
+    *   **病历 (Archive)**: 入口按钮 -> 跳转 `pages/record/timeline`。
+    *   **档案 (Profile)**: 查看患者填写的九宫格数据（病史、过敏等）。
+
+### 3.4 电子病历/健康档案 (Medical Record)
+该模块包含查看列表和编辑/新增功能。
+
+#### A. 诊疗时间轴 (Timeline)
+**路径**: `pages/record/timeline`
+*   **布局**: 垂直时间轴样式。
+*   **节点内容**:
+    *   日期 + 类型 (初诊/复诊)。
+    *   卡片内容：诊断标题、医嘱摘要、医生姓名。
+    *   右上角：“编辑”按钮。
+*   **检查报告**: 切换 Tab 查看图片网格 (Grid)，支持 `wx.previewImage` 预览大图。
+*   **底部悬浮按钮 (FAB)**: “+ 新建病历” -> 跳转 `pages/record/edit`。
+
+#### B. 编辑/新建病历 (Edit Record)
+**路径**: `pages/record/edit`
+*   **表单组件**:
+    *   **就诊日期**: `<picker mode="date">`。
+    *   **就诊类型**: 单选标签 (Segmented Control)。
+    *   **主治医生**: 自动填入，可修改。
+    *   **诊断标题**: 输入框。
+    *   **病情描述**: 多行文本框 `<textarea>`，支持语音输入图标。
+    *   **标签**: 输入框。
+*   **底部操作**:
+    *   “保存”按钮 (Primary)。
+    *   “删除”按钮 (Warn, 仅编辑模式显示)。
+
+### 3.5 高危预警 (Alerts)
+**路径**: `pages/patient/alerts`
+*   **列表**: 仅展示状态为 Critical/High 的患者。
+*   **内容**: 具体的预警原因（如“连续3次尿酸超标”、“痛风急性发作”）。
+*   **操作**: “一键提醒” (发送模板消息)。
+
+---
+
+## 4. 数据模型 (TypeScript Interfaces)
+
+```typescript
+// 医生概览统计
+interface DoctorStats {
+  totalPatients: number;
+  activePatients: number; // 近7天有数据更新
+  controlRate: number;    // 尿酸达标率 (0-100)
+  highRiskCount: number;  // 高危患者数
+}
+
+// 患者列表项摘要
+interface PatientSummary {
+  id: string;
+  name: string;
+  avatarUrl: string;
+  gender: '男' | '女';
+  age: number;
+  currentUA: number;      // 最新尿酸值
+  lastVisit: string;      // YYYY-MM-DD
+  status: 'Normal' | 'High' | 'Critical';
+  tags: string[];         // 如 ["高危", "依从性差"]
+}
+
+// 病历记录
+interface MedicalRecord {
+  id: string;
+  patientId: string;
+  date: string;           // YYYY-MM-DD
+  type: '初诊' | '复诊' | '急诊' | '住院';
+  title: string;          // 诊断标题
+  description: string;    // 详细描述
+  doctorName: string;
+  images?: string[];      // 图片URL数组
+}
+```
+
+---
+
+## 5. 交互与逻辑规范
+
+1.  **路由传参**:
+    *   列表页到详情页：`wx.navigateTo({ url: '/pages/patient/detail?id=123' })`。
+    *   详情页接收：在 `onLoad(options)` 中获取 `options.id`。
+
+2.  **网络请求**:
+    *   封装 `request.ts`，统一处理 `wx.request`。
+    *   Token失效处理：自动跳转至 `pages/login/index`。
+    *   加载状态：所有列表加载需显示 `wx.showLoading` 或骨架屏 (Skeleton)。
+
+3.  **编辑保存逻辑**:
+    *   点击保存后，显示 `wx.showLoading({ title: '保存中' })`。
+    *   成功后显示 `wx.showToast({ title: '保存成功' })`，并 `wx.navigateBack()` 返回上一页。
+    *   上一页 (Timeline) 需要在 `onShow` 中判断是否需要刷新数据，或通过 `EventChannel` 通知更新。
+
+4.  **图片处理**:
+    *   使用 `wx.chooseMedia` 选择图片。
+    *   上传至云存储后获取 FileID/URL 再提交表单。
+
+---
+
+## 6. 微信小程序特有能力集成
+
+*   **消息订阅**: 在“一键提醒”功能中，调用 `wx.requestSubscribeMessage` 获取发送模板消息的权限。
+*   **OCR 识别**: 在编辑病历时，可集成 OCR 插件，支持拍照识别化验单文字自动填入。
+*   **隐私协议**: 首次进入小程序需弹窗请求用户授权隐私协议（获取头像昵称等）。

@@ -1,0 +1,229 @@
+<wxs module="utils">
+  function formatTime(timestamp) {
+    if (!timestamp) return '';
+    var date = getDate(timestamp);
+    var now = getDate();
+    var diff = now.getTime() - date.getTime();
+    
+    if (diff < 86400000) {
+      var h = date.getHours();
+      var m = date.getMinutes();
+      return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+    } else if (diff < 172800000) {
+      return '昨天';
+    } else {
+      var mo = date.getMonth() + 1;
+      var d = date.getDate();
+      return mo + '/' + d;
+    }
+  }
+  function getFirstChar(str) {
+    if (!str) return '';
+    return str.substring(0, 1);
+  }
+  module.exports = {
+    formatTime: formatTime,
+    getFirstChar: getFirstChar
+  };
+</wxs>
+
+<view class="page-container">
+  
+  <!-- ================= 工作台 (Home) ================= -->
+  <view wx:if="{{activeTab === 'home'}}">
+    <!-- 顶部栏 -->
+    <view class="workbench-header" style="padding-top: {{statusBarHeight + 10}}px;">
+      <view class="doctor-info">
+        <image wx:if="{{currentUser.avatar}}" class="doctor-avatar" src="{{currentUser.avatar}}" mode="aspectFill"></image>
+        <view wx:else class="doctor-avatar">{{currentUser.nickName[0] || '医'}}</view>
+        <view>
+          <view class="doctor-name">{{currentUser.nickName || '李医生'}}</view>
+          <view class="doctor-dept">风湿免疫科</view>
+        </view>
+      </view>
+      <view class="notification-btn">
+        <text class="icon">🔔</text>
+        <view class="notification-badge"></view>
+      </view>
+    </view>
+
+    <!-- 核心数据 -->
+    <view class="stats-grid">
+      <view class="stat-card">
+        <view class="stat-label">患者总数</view>
+        <view class="stat-value">{{stats.totalPatients}}</view>
+      </view>
+      <view class="stat-card">
+        <view class="stat-label">达标率</view>
+        <view class="stat-value">{{stats.controlRate}}%</view>
+        <view class="stat-trend">较上月 +{{stats.controlRateTrend}}%</view>
+      </view>
+      <view class="stat-card alert" bindtap="goToAlerts">
+        <view class="stat-label">
+          高风险预警
+          <text class="alert-icon">⚠️</text>
+        </view>
+        <view class="stat-value">{{stats.highRiskCount}}</view>
+        <view class="stat-subtext">需要关注</view>
+      </view>
+      <view class="stat-card">
+        <view class="stat-label">近期活跃</view>
+        <view class="stat-value">{{stats.activePatients}}</view>
+      </view>
+    </view>
+
+    <!-- 待办事项 -->
+    <view class="todo-section">
+      <view class="section-header">
+        <text class="section-title">待办事项</text>
+        <text class="section-more">{{todos.length}} 项</text>
+      </view>
+      <view class="todo-list">
+        <block wx:for="{{todos}}" wx:key="id">
+          <view class="todo-card {{item.type}}">
+            <view class="todo-content">
+              <view class="todo-title">{{item.title}}</view>
+              <view class="todo-desc">
+                <text>患者：{{item.patientName}}</text>
+                <text class="todo-deadline"> • {{item.deadline}}</text>
+              </view>
+            </view>
+            <view class="todo-action">
+              <view class="btn" bindtap="handleTodo" data-item="{{item}}">处理</view>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <!-- ================= 患者管理 (Patients) ================= -->
+  <view wx:if="{{activeTab === 'patients'}}">
+    <view class="patient-search-bar" style="padding-top: {{statusBarHeight + 10}}px;">
+      <view class="section-title" style="margin-bottom: 20rpx; text-align: center;">患者管理</view>
+      <view class="search-input-wrap">
+        <text class="search-icon">🔍</text>
+        <input class="search-input" placeholder="搜索姓名、ID..." />
+        <text class="filter-icon">filter</text>
+      </view>
+      <view class="filter-tabs">
+        <view class="filter-tab {{filterType === 'all' ? 'active' : ''}}" bindtap="switchFilter" data-filter="all">全部</view>
+        <view class="filter-tab {{filterType === 'high' ? 'active' : ''}}" bindtap="switchFilter" data-filter="high">高危</view>
+        <view class="filter-tab {{filterType === 'not_standard' ? 'active' : ''}}" bindtap="switchFilter" data-filter="not_standard">未达标</view>
+        <view class="filter-tab {{filterType === 'active' ? 'active' : ''}}" bindtap="switchFilter" data-filter="active">近期活跃</view>
+      </view>
+    </view>
+
+    <view class="patient-list">
+      <view wx:if="{{!patients.length}}" class="empty-state" style="padding: 80rpx 40rpx; text-align: center; color: #9CA3AF; font-size: 28rpx;">
+        暂无患者数据，请确认数据库中存在已注册的患者账号
+      </view>
+      <block wx:for="{{patients}}" wx:key="id">
+        <view class="patient-card" bindtap="goToPatientDetail" data-id="{{item.id}}">
+          <view class="patient-avatar">{{item.name[0]}}</view>
+          <view class="patient-info">
+            <view class="info-header">
+              <text class="info-name">{{item.name}}</text>
+              <text class="info-meta">{{item.gender}} {{item.age}}</text>
+            </view>
+            <view class="info-data">
+              UA: <text class="ua-value">{{item.ua}}</text> • {{item.lastVisit}}
+            </view>
+          </view>
+          <view class="patient-status">
+            <view class="status-tag {{item.status}}">
+              {{item.status === 'Critical' ? '高危' : (item.status === 'High' ? '偏高' : '正常')}}
+            </view>
+            <text wx:if="{{item.status !== 'Normal'}}" class="alert-icon">⚠️</text>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- ================= 消息 (Messages) ================= -->
+  <view wx:if="{{activeTab === 'messages'}}">
+    <view class="section-title" style="padding-top: {{statusBarHeight + 10}}px; text-align: center; background: #F6F8FA; padding-bottom: 20rpx;">消息</view>
+    <view class="inbox-list" wx:if="{{conversations.length}}">
+      <block wx:for="{{conversations}}" wx:key="partnerOpenid">
+        <view class="inbox-item-wrapper">
+          <view class="inbox-item" bindtap="goChat" data-item="{{item}}" bindlongpress="showDeleteAction">
+            <view class="avatar">{{utils.getFirstChar(item.partnerName)}}</view>
+            <view class="content-area">
+              <view class="top-row">
+                <text class="name">{{item.partnerName}}</text>
+                <text class="time">{{utils.formatTime(item.lastTime)}}</text>
+              </view>
+              <view class="bottom-row">
+                <text class="message text-ellipsis">{{item.lastContent}}</text>
+                <view class="badge" wx:if="{{item.unread > 0}}">{{item.unread}}</view>
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+    </view>
+
+    <view class="empty-state" wx:if="{{!conversations.length && !loadingMessages}}">
+      暂无消息
+    </view>
+  </view>
+
+  <!-- ================= 个人中心 (Profile) ================= -->
+  <view wx:if="{{activeTab === 'profile'}}">
+    <view class="section-title" style="padding-top: {{statusBarHeight + 10}}px; text-align: center; background: #F6F8FA; padding-bottom: 20rpx;">个人中心</view>
+    
+    <view class="profile-header">
+      <image wx:if="{{currentUser.avatar}}" class="profile-avatar" src="{{currentUser.avatar}}" mode="aspectFill"></image>
+      <view wx:else class="profile-avatar">{{currentUser.nickName[0] || '医'}}</view>
+      <view class="profile-info">
+        <view class="name">{{currentUser.nickName || '李医生'}}</view>
+        <view class="title">风湿免疫科 • 主任医师</view>
+      </view>
+    </view>
+
+    <view class="menu-list">
+      <view class="menu-item">
+        <text>我的排班</text>
+        <text class="menu-arrow">></text>
+      </view>
+      <view class="menu-item">
+        <text>患者评价</text>
+        <text class="menu-arrow">></text>
+      </view>
+      <view class="menu-item">
+        <text>设置</text>
+        <text class="menu-arrow">></text>
+      </view>
+    </view>
+
+    <view class="logout-section">
+      <text class="logout-tip">账户切换</text>
+      <view class="card" style="padding: 32rpx;">
+        <view style="font-size: 24rpx; color: #6B7280; margin-bottom: 24rpx;">清空当前登录信息，重新选择医生/非医生账号</view>
+        <button class="logout-btn" bindtap="handleLogout">切换/退出登陆</button>
+      </view>
+    </view>
+  </view>
+
+  <!-- ================= 底部导航栏 (TabBar) ================= -->
+  <view class="tab-bar">
+    <view class="tab-item {{activeTab === 'home' ? 'active' : ''}}" bindtap="switchTab" data-tab="home">
+      <image class="tab-icon" src="{{activeTab === 'home' ? '/images/tabs/home-active.png' : '/images/tabs/home.png'}}"></image>
+      <text class="tab-text">工作台</text>
+    </view>
+    <view class="tab-item {{activeTab === 'patients' ? 'active' : ''}}" bindtap="switchTab" data-tab="patients">
+      <image class="tab-icon" src="{{activeTab === 'patients' ? '/images/tabs/user-active.png' : '/images/tabs/user.png'}}"></image>
+      <text class="tab-text">患者</text>
+    </view>
+    <view class="tab-item {{activeTab === 'messages' ? 'active' : ''}}" bindtap="switchTab" data-tab="messages">
+      <image class="tab-icon" src="{{activeTab === 'messages' ? '/images/tabs/book-active.png' : '/images/tabs/book.png'}}"></image>
+      <text class="tab-text">消息</text>
+    </view>
+    <view class="tab-item {{activeTab === 'profile' ? 'active' : ''}}" bindtap="switchTab" data-tab="profile">
+      <image class="tab-icon" src="{{activeTab === 'profile' ? '/images/tabs/user-active.png' : '/images/tabs/user.png'}}"></image>
+      <text class="tab-text">我的</text>
+    </view>
+  </view>
+
+</view>

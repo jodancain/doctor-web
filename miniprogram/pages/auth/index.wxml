@@ -1,0 +1,108 @@
+<view class="auth-page">
+  <view class="nav-bar">
+    <!-- <button class="text-btn" bindtap="goBack">返回</button> -->
+  </view>
+
+  <view class="hero">
+    <view class="brand">
+      <text class="brand-dot">痛风</text>
+      <text class="brand-name">管家</text>
+    </view>
+    <view class="hero-title">{{mode === 'login' ? '欢迎回来' : '创建新账号'}}</view>
+    <view class="hero-subtitle">{{mode === 'login' ? '继续使用您的健康记录' : '开启医生/患者协同管理'}}</view>
+  </view>
+
+  <view class="card">
+    <view class="tab-row">
+      <view
+        class="tab-item {{mode === 'login' ? 'active' : ''}}"
+        data-mode="login"
+        bindtap="setMode"
+      >登录</view>
+      <view
+        class="tab-item {{mode === 'register' ? 'active' : ''}}"
+        data-mode="register"
+        bindtap="setMode"
+      >注册</view>
+    </view>
+
+    <view class="form-section">
+      <view class="input-block">
+        <text class="label">账号</text>
+        <input
+          class="field"
+          placeholder="请输入账号"
+          value="{{username}}"
+          data-field="username"
+          bindinput="onInput"
+        />
+      </view>
+
+      <view class="input-block">
+        <text class="label">密码</text>
+        <input
+          password
+          class="field"
+          placeholder="请输入密码"
+          value="{{password}}"
+          data-field="password"
+          bindinput="onInput"
+        />
+      </view>
+
+      <view wx:if="{{mode === 'register'}}" class="register-extra">
+        <view class="input-block">
+          <text class="label">昵称</text>
+          <input
+            class="field"
+            placeholder="用于展示"
+            value="{{nickName}}"
+            data-field="nickName"
+            bindinput="onInput"
+          />
+        </view>
+
+        <view class="input-block">
+          <text class="label">账号类型</text>
+          <radio-group class="radio-row" bindchange="onRoleChange">
+            <label class="radio-pill {{role === 'user' ? 'checked' : ''}}">
+              <radio value="user" checked="{{role === 'user'}}" /> 用户
+            </label>
+            <label class="radio-pill {{role === 'doctor' ? 'checked' : ''}}">
+              <radio value="doctor" checked="{{role === 'doctor'}}" /> 医生
+            </label>
+          </radio-group>
+        </view>
+
+        <view class="input-block" wx:if="{{role === 'doctor'}}">
+          <text class="label">医生码</text>
+          <view class="inline-field">
+            <input
+              class="field"
+              placeholder="请输入医生码"
+              value="{{doctorCode}}"
+              data-field="doctorCode"
+              bindinput="onInput"
+            />
+            <button size="mini" class="ghost" bindtap="fillDoctorCode">示例</button>
+          </view>
+          <text class="field-tip">用于验证医生身份，示例医生码：18736</text>
+        </view>
+      </view>
+    </view>
+
+    <button
+      class="primary-btn"
+      bindtap="handleSubmit"
+      loading="{{submitting}}"
+      disabled="{{submitting}}"
+    >
+      {{mode === 'login' ? '登录' : '注册'}}
+    </button>
+
+    <view class="card-tip">
+      注册医生账号需要输入医生码 18736，用于区分身份。
+    </view>
+  </view>
+</view>
+

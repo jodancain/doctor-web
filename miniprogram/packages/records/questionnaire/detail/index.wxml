@@ -1,0 +1,41 @@
+<view class="container" wx:if="{{questionnaire}}">
+  <view class="header">
+    <view class="title">{{questionnaire.title}}</view>
+    <view class="desc" wx:if="{{questionnaire.description}}">{{questionnaire.description}}</view>
+  </view>
+  <view class="question-list">
+    <block wx:for="{{questionnaire.questions}}" wx:key="id">
+      <view class="question-item">
+        <view class="q-title">
+          <text class="required" wx:if="{{item.required}}">*</text>
+          {{index + 1}}. {{item.title}}
+        </view>
+        <!-- Single Choice -->
+        <radio-group wx:if="{{item.type === 'single_choice'}}" bindchange="onSingleChange" data-id="{{item.id}}">
+          <label class="option" wx:for="{{item.options}}" wx:key="id" wx:for-item="opt">
+            <radio value="{{opt.label}}" checked="{{answers[item.id] === opt.label}}" color="#4F46E5"/>
+            <text class="opt-text">{{opt.label}}</text>
+          </label>
+        </radio-group>
+        <!-- Multiple Choice -->
+        <checkbox-group wx:if="{{item.type === 'multiple_choice'}}" bindchange="onMultipleChange" data-id="{{item.id}}">
+          <label class="option" wx:for="{{item.options}}" wx:key="id" wx:for-item="opt">
+            <checkbox value="{{opt.label}}" checked="{{answers[item.id] && answers[item.id].includes(opt.label)}}" color="#4F46E5"/>
+            <text class="opt-text">{{opt.label}}</text>
+          </label>
+        </checkbox-group>
+        <!-- Text -->
+        <textarea wx:if="{{item.type === 'text'}}" class="textarea" placeholder="请输入您的回答..." bindinput="onTextChange" data-id="{{item.id}}" value="{{answers[item.id]}}"></textarea>
+        <!-- Rating -->
+        <view wx:if="{{item.type === 'rating'}}" class="rating-group">
+          <slider bindchange="onRatingChange" data-id="{{item.id}}" min="1" max="5" step="1" value="{{answers[item.id] || 0}}" show-value activeColor="#4F46E5"/>
+          <view class="rating-hint">请滑动选择 1-5 分</view>
+        </view>
+      </view>
+    </block>
+  </view>
+  <view class="footer">
+    <button class="submit-btn" bindtap="submit" loading="{{submitting}}">提交问卷</button>
+  </view>
+</view>
+<view class="loading" wx:else>加载中...</view>

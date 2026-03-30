@@ -1,0 +1,115 @@
+<view class="page-container">
+  <!-- 顶部标题 -->
+  <view class="section-header">
+    <text class="title">今日药物</text>
+  </view>
+
+  <!-- 药物列表 -->
+  <view class="medication-list">
+    <block wx:if="{{medications.length > 0}}">
+      <view class="med-card" wx:for="{{medications}}" wx:key="_id" bindlongpress="onEditMedication" data-id="{{item._id}}">
+        <!-- 图标区域 -->
+        <view class="med-icon-box {{item.type === 'capsule' ? 'capsule-bg' : 'pill-bg'}}">
+          <block wx:if="{{item.type === 'capsule'}}">
+             <text class="med-icon-text" style="font-size: 48rpx;">💊</text> 
+          </block>
+          <block wx:else>
+             <text class="med-icon-text" style="font-size: 48rpx; color: #9CA3AF;">💊</text>
+          </block>
+        </view>
+        
+        <view class="med-info">
+          <view class="med-name">{{item.name}}</view>
+          <view class="med-desc">
+            <text class="desc-item">{{item.dosage}}</text>
+            <text class="desc-sep"> · </text>
+            <text class="desc-item">{{item.frequency}}</text>
+          </view>
+        </view>
+
+        <view class="med-action">
+          <block wx:if="{{item.status === 'taken'}}">
+            <view class="status-taken">
+              <view class="check-icon">✓</view>
+              <text>已服用</text>
+            </view>
+          </block>
+          <block wx:else>
+            <button class="clock-in-btn" catchtap="onClockIn" data-id="{{item._id}}">打卡</button>
+          </block>
+        </view>
+      </view>
+    </block>
+    
+    <view wx:else class="empty-state">
+      <text>暂无用药计划</text>
+      <text class="empty-hint">长按卡片可编辑或删除</text>
+    </view>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="add-btn-container" bindtap="onAddMedication">
+    <view class="add-btn-dashed">
+      <text class="plus">+</text> 添加药物
+    </view>
+  </view>
+
+  <!-- 使用提醒 -->
+  <view class="usage-tip">
+    <text class="tip-text">💡 长按药物卡片可进行编辑或删除</text>
+  </view>
+</view>
+
+<!-- 添加/编辑药物弹窗 -->
+<page-container 
+  show="{{showAddModal}}" 
+  position="bottom" 
+  round
+  custom-style="background-color: #fff;"
+>
+  <view class="add-modal">
+    <view class="modal-header">
+      <text>{{editingId ? '编辑用药计划' : '添加用药计划'}}</text>
+      <view class="close-icon" bindtap="closeAddModal">×</view>
+    </view>
+    <view class="modal-body">
+      <view class="input-group">
+        <text class="label">药品名称</text>
+        <input 
+          class="input" 
+          placeholder="例如：非布司他" 
+          placeholder-class="input-placeholder"
+          value="{{newMedName}}"
+          bindinput="onNameInput"
+        />
+      </view>
+      <view class="input-group">
+        <text class="label">单次剂量</text>
+        <input 
+          class="input" 
+          placeholder="例如：40mg" 
+          placeholder-class="input-placeholder"
+          value="{{newMedDosage}}"
+          bindinput="onDosageInput"
+        />
+      </view>
+      <view class="input-group">
+        <text class="label">频次</text>
+        <input 
+          class="input" 
+          placeholder="例如：每日一次" 
+          placeholder-class="input-placeholder"
+          value="{{newMedFreq}}"
+          bindinput="onFreqInput"
+        />
+      </view>
+      
+      <!-- 编辑模式下显示删除按钮 -->
+      <block wx:if="{{editingId}}">
+        <button class="delete-btn" bindtap="deleteMedication">删除用药计划</button>
+      </block>
+      
+      <button class="submit-btn" bindtap="submitMedication">保存</button>
+    </view>
+  </view>
+</page-container>

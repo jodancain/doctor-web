@@ -1,0 +1,78 @@
+<view class="page-container">
+  <!-- 头部 -->
+  <view class="header">
+    <text class="header-title">记录尿酸</text>
+    <text class="header-subtitle">输入检测数值</text>
+  </view>
+
+  <!-- 仪表盘卡片 -->
+  <view class="dashboard-card">
+    <view class="value-display">
+      <text class="value">{{newValue || 360}}</text>
+      <text class="unit">μmol/L</text>
+    </view>
+    
+    <view class="status-chip {{statusClass}}">
+      <text class="status-icon">⚡</text> 
+      <text>{{statusText}}</text>
+    </view>
+
+    <!-- 刻度尺/滑动条 -->
+    <view class="slider-container">
+      <slider 
+        min="100" 
+        max="800" 
+        value="{{newValue || 360}}" 
+        activeColor="#10B981" 
+        backgroundColor="#E5E7EB" 
+        block-size="24"
+        block-color="#10B981"
+        bindchanging="onSliderChange"
+        bindchange="onSliderChange"
+      />
+      <view class="scale-labels">
+        <text>0</text>
+        <text>360</text>
+        <text>420</text>
+        <text>...</text>
+      </view>
+      <!-- 颜色条 -->
+      <view class="color-bar">
+        <view class="bar-segment normal"></view>
+        <view class="bar-segment high"></view>
+        <view class="bar-segment critical"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 日期时间选择 -->
+  <view class="section-title">日期时间</view>
+  <view class="card date-card">
+    <picker mode="date" value="{{date}}" bindchange="onDateChange">
+      <view class="picker-row">
+        <view class="picker-left">
+          <text class="icon">📅</text>
+          <text class="picker-value">{{date}}</text>
+        </view>
+        <text class="arrow">></text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 历史趋势图表 -->
+  <view class="chart-section">
+    <view class="section-header">
+      <text class="section-title">历史趋势</text>
+      <text class="action-link" bindtap="goHistory">查看列表</text>
+    </view>
+    
+    <view class="chart-container">
+      <canvas type="2d" id="trendChart" class="trend-chart"></canvas>
+    </view>
+  </view>
+
+  <!-- 底部按钮 -->
+  <view class="footer">
+    <button class="save-btn" bindtap="submitRecord">保存记录</button>
+  </view>
+</view>

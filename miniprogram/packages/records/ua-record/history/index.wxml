@@ -1,0 +1,42 @@
+<view class="page">
+  <view class="header-section">
+    <view class="header-title">尿酸历史记录</view>
+    <view class="header-subtitle">共 {{records.length}} 条记录</view>
+  </view>
+
+  <view class="record-list">
+    <block wx:if="{{records.length > 0}}">
+      <block wx:for="{{records}}" wx:key="id">
+        <view class="record-item">
+          <view class="status-bar {{item.status === 'high' ? 'high' : 'normal'}}"></view>
+          <view class="record-content">
+            <view class="left">
+              <view class="date-row">
+                <text class="date">{{item.date}}</text>
+                <text class="separator">·</text>
+                <text class="time">{{item.time}}</text>
+              </view>
+              <view class="remark-row">
+                <text class="tag">{{item.remark}}</text>
+              </view>
+            </view>
+            <view class="right">
+              <view class="value-row">
+                <text class="value {{item.status === 'high' ? 'high' : 'normal'}}">{{item.value}}</text>
+                <text class="unit">μmol/L</text>
+              </view>
+              <view class="status-badge {{item.status === 'high' ? 'high' : 'normal'}}">
+                {{item.status === 'high' ? '偏高' : '正常'}}
+              </view>
+            </view>
+          </view>
+        </view>
+      </block>
+    </block>
+    
+    <view wx:else class="empty-state">
+      <text>暂无历史记录</text>
+      <text class="empty-hint">快去记录第一笔数据吧</text>
+    </view>
+  </view>
+</view>

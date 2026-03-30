@@ -1,0 +1,62 @@
+<view class="container" wx:if="{{!loading && article}}">
+  <!-- 封面图 -->
+  <view class="cover-image" wx:if="{{article.coverUrl}}">
+    <image src="{{article.coverUrl}}" mode="aspectFill" />
+  </view>
+
+  <view class="content-wrapper">
+    <!-- 标题区 -->
+    <view class="header">
+      <view class="title">{{article.title}}</view>
+      <view class="meta">
+        <text class="category-tag">{{article.category}}</text>
+        <text class="time">{{article.publishTime}}</text>
+        <view class="stats">
+          <text class="views">👁 {{article.views}}</text>
+          <text class="read-time">🕒 {{article.readTime}}</text>
+        </view>
+      </view>
+    </view>
+
+    <!-- 分割线 -->
+    <view class="divider"></view>
+
+    <!-- 正文内容 (Rich Text) -->
+    <view class="article-body">
+      <rich-text nodes="{{article.content}}"></rich-text>
+    </view>
+
+    <!-- 底部相关推荐 -->
+    <view class="related-section" wx:if="{{relatedArticles.length > 0}}">
+      <view class="related-title">相关推荐</view>
+      <view class="related-list">
+        <block wx:for="{{relatedArticles}}" wx:key="_id">
+          <view class="related-card" data-id="{{item._id}}" bindtap="onRelatedTap">
+            <view class="related-text">{{item.title}}</view>
+            <view class="related-meta">
+              <text class="tag">{{item.category}}</text>
+              <text>{{item.views}}阅读</text>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <!-- 底部操作栏 -->
+  <view class="bottom-bar">
+    <view class="action-btn" bindtap="onShareAppMessage">
+      <text class="icon">📤</text>
+      <text>分享</text>
+    </view>
+    <view class="action-btn">
+      <text class="icon">⭐</text>
+      <text>收藏</text>
+    </view>
+  </view>
+</view>
+
+<view class="loading-state" wx:if="{{loading}}">
+  <view class="spinner"></view>
+  <text>正在加载...</text>
+</view>

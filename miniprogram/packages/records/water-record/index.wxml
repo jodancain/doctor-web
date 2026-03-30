@@ -1,0 +1,94 @@
+<view class="water-page">
+  <!-- 顶部标题 -->
+  <view class="header">
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">←</text>
+    </view>
+    <text class="header-title">饮水打卡</text>
+    <view class="header-placeholder"></view>
+  </view>
+
+  <!-- 进度圆环 -->
+  <view class="progress-section">
+    <view class="progress-wrapper">
+      <canvas 
+        id="progress-canvas" 
+        type="2d" 
+        class="progress-canvas"
+      ></canvas>
+      <view class="progress-content">
+        <view class="water-icons">
+          <text class="water-icon">💧</text>
+          <text class="water-icon">💧</text>
+        </view>
+        <view class="current-amount">{{currentAmount}}</view>
+        <view class="unit">ml</view>
+        <view class="target-text">目标 {{targetAmount}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷记录 -->
+  <view class="quick-record-section">
+    <view class="section-title">快捷记录</view>
+    <view class="quick-options">
+      <block wx:for="{{quickOptions}}" wx:key="id">
+        <view 
+          class="quick-item"
+          bindtap="onQuickRecord"
+          data-amount="{{item.amount}}"
+          data-type="{{item.type}}"
+          data-id="{{item.id}}"
+        >
+          <view class="quick-icon">{{item.icon}}</view>
+          <text class="quick-name">{{item.name}}</text>
+          <text class="quick-amount">+{{item.amount}}ml</text>
+        </view>
+      </block>
+    </view>
+
+    <!-- 自定义输入记录 -->
+    <view class="custom-record-section">
+      <view class="custom-input-wrapper">
+        <input 
+          class="custom-input" 
+          type="number" 
+          placeholder="自定义水量" 
+          placeholder-class="custom-placeholder"
+          value="{{customAmount}}"
+          bindinput="onCustomAmountInput"
+        />
+        <text class="custom-unit">ml</text>
+      </view>
+      <view class="custom-btn {{customAmount > 0 ? 'active' : ''}}" bindtap="onCustomRecord">
+        记录
+      </view>
+    </view>
+  </view>
+
+  <!-- 今日明细 -->
+  <view class="detail-section">
+    <view class="section-title">今日明细</view>
+    <view class="record-list">
+      <block wx:if="{{todayRecords.length > 0}}">
+        <view 
+          class="record-item"
+          wx:for="{{todayRecords}}"
+          wx:key="_id"
+        >
+          <view class="record-icon">{{item.icon}}</view>
+          <view class="record-info">
+            <text class="record-type">{{item.typeName}}</text>
+          </view>
+          <view class="record-meta">
+            <text class="record-amount">+{{item.amount}} ml</text>
+            <text class="record-time">{{item.time}}</text>
+          </view>
+        </view>
+      </block>
+      <view wx:else class="empty-records">
+        <text>暂无记录</text>
+      </view>
+    </view>
+  </view>
+</view>

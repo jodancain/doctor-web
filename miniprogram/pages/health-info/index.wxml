@@ -1,0 +1,59 @@
+<view class="knowledge-page">
+  <!-- 分类筛选 -->
+  <view class="category-section">
+    <scroll-view class="category-scroll" scroll-x>
+      <view class="category-list">
+        <block wx:for="{{categories}}" wx:key="id">
+          <view 
+            class="category-btn {{activeCategory === item.name ? 'active' : ''}}"
+            data-category="{{item.name}}"
+            bindtap="onCategoryTap"
+          >
+            {{item.name}}
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 热门推荐 -->
+  <view class="hot-section" wx:if="{{hotArticle}}">
+    <view class="hot-card" bindtap="onHotArticleTap">
+      <view class="hot-header">
+        <text class="hot-label">热门推荐</text>
+        <view class="read-time">
+          <text class="clock-icon">🕒</text>
+          <text>{{hotArticle.readTime}}</text>
+        </view>
+      </view>
+      <view class="hot-title">{{hotArticle.title}}</view>
+      <view class="hot-desc">{{hotArticle.description}}</view>
+    </view>
+  </view>
+
+  <!-- 最新文章 -->
+  <view class="article-section">
+    <view class="section-title">最新文章</view>
+    <view class="article-list">
+      <block wx:for="{{filteredArticles}}" wx:key="_id">
+        <view class="article-card" data-id="{{item._id}}" bindtap="onArticleTap">
+          <view class="article-header">
+            <view class="article-title">{{item.title}}</view>
+          </view>
+          <view class="article-footer">
+            <view class="category-tag">{{item.category}}</view>
+            <view class="article-meta">
+              <text class="views-icon">👁</text>
+              <text class="views-count">{{item.views}}</text>
+              <text class="read-time-text">{{item.readTime}}阅读</text>
+            </view>
+          </view>
+        </view>
+      </block>
+      
+      <view wx:if="{{filteredArticles.length === 0}}" class="empty-state">
+        <text>暂无相关文章</text>
+      </view>
+    </view>
+  </view>
+</view>

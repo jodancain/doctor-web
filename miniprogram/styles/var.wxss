@@ -1,0 +1,45 @@
+page {
+  /* 主色系 - 医疗蓝 */
+  --color-primary: #2563EB;
+  --color-primary-gradient: #2563EB;
+  --color-primary-light: #3B82F6;
+  --color-primary-bg: #EFF6FF;
+  
+  /* 辅色 */
+  --color-secondary: #3B82F6;
+  
+  /* 功能色 */
+  --color-success: #16A34A;
+  --color-success-bg: #DCFCE7;
+  --color-warning: #F97316;
+  --color-warning-bg: #FFF7ED;
+  --color-danger: #DC2626;
+  --color-danger-bg: #FEE2E2;
+  --color-danger-dark: #B91C1C;
+  --color-info: #3B82F6;
+
+  /* 背景色 */
+  --bg-color: #F5F7FA;
+  --bg-color-card: #FFFFFF;
+
+  /* 文本色 */
+  --text-main: #111827;      /* 标题/关键数字 */
+  --text-secondary: #4B5563; /* 普通正文 */
+  --text-placeholder: #9CA3AF; /* 次要说明文字 */
+  
+  /* 边框/分割线 */
+  --border-color: #E5E7EB;
+
+  /* 圆角 */
+  --radius-card: 20rpx;
+  --radius-button: 16rpx;
+  --radius-input: 16rpx;
+  
+  /* 间距 */
+  --spacing-xs: 8rpx;
+  --spacing-sm: 16rpx;
+  --spacing-md: 24rpx;
+  --spacing-lg: 32rpx;
+  --spacing-xl: 48rpx;
+}
+

@@ -1,0 +1,69 @@
+<view class="container bg-slate-50 min-h-screen pb-20">
+  <!-- Header -->
+  <view class="bg-white w-full p-6 pb-6 shadow-sm">
+    <view class="flex justify-between items-start mb-6">
+      <view class="flex items-center space-x-4">
+        <view class="w-14 h-14 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xl border-2 border-indigo-50">
+          医
+        </view>
+        <view>
+          <view class="text-slate-900 font-bold text-lg flex items-center">
+            {{doctorInfo.name}}
+            <text class="ml-2 text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">{{doctorInfo.title}}</text>
+          </view>
+          <view class="text-slate-500 text-sm mt-1">{{doctorInfo.hospital}} • {{doctorInfo.department}}</view>
+        </view>
+      </view>
+      <view class="bg-slate-100 p-2 rounded-full" bindtap="onSwitchRole">
+        <text class="text-slate-500 text-xs">切换</text>
+      </view>
+    </view>
+
+    <!-- Stats Grid -->
+    <view class="grid grid-cols-2 gap-4">
+      <view class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+        <view class="text-slate-400 text-xs mb-1">管理患者</view>
+        <view class="text-2xl font-bold text-slate-800">{{stats.totalPatients}}</view>
+      </view>
+      <view class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+        <view class="text-slate-400 text-xs mb-1">达标率</view>
+        <view class="text-2xl font-bold text-emerald-600">{{stats.controlRate}}%</view>
+      </view>
+      <view class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+        <view class="text-slate-400 text-xs mb-1">活跃患者</view>
+        <view class="text-2xl font-bold text-indigo-600">{{stats.activePatients}}</view>
+      </view>
+      <view class="bg-slate-50 p-3 rounded-xl border border-slate-100">
+        <view class="text-slate-400 text-xs mb-1">高危预警</view>
+        <view class="text-2xl font-bold text-rose-600">{{stats.highRiskCount}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- Patient List -->
+  <view class="px-4 mt-6">
+    <view class="flex justify-between items-center mb-4">
+      <text class="text-lg font-bold text-slate-800">患者列表</text>
+      <text class="text-sm text-indigo-600">查看全部</text>
+    </view>
+    
+    <view class="space-y-3">
+      <block wx:for="{{patients}}" wx:key="id">
+        <view class="bg-white p-4 rounded-xl shadow-sm flex items-center justify-between">
+          <view class="flex items-center space-x-3">
+            <view class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold">
+              {{item.name[0]}}
+            </view>
+            <view>
+              <view class="font-bold text-slate-800">{{item.name}} <text class="text-xs font-normal text-slate-400 ml-1">{{item.gender}} {{item.age}}岁</text></view>
+              <view class="text-xs text-slate-400 mt-0.5">最近就诊: {{item.lastVisit}}</view>
+            </view>
+          </view>
+          <view class="px-2 py-1 rounded text-xs font-bold {{item.status === 'Normal' ? 'bg-emerald-50 text-emerald-600' : item.status === 'High' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'}}">
+            {{item.status === 'Normal' ? '达标' : item.status === 'High' ? '偏高' : '高危'}}
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+</view>

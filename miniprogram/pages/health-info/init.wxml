@@ -1,0 +1,71 @@
+<view class="init-page">
+  <view class="header">
+    <view class="title">建立健康档案</view>
+    <view class="icon-wrapper">
+      <view class="folder-icon">📁</view>
+    </view>
+  </view>
+
+  <view class="welcome-section">
+    <view class="welcome-text">欢迎使用病历夹</view>
+    <view class="desc-text">完善您的基础信息,系统将为您建立专属的健康档案,方便随访与管理。</view>
+  </view>
+
+  <view class="form-section">
+    <view class="form-item">
+      <text class="label">姓名</text>
+      <input 
+        class="input" 
+        type="text" 
+        placeholder="张伟"
+        placeholder-style="color: #9CA3AF;"
+        value="{{name}}"
+        bindinput="onNameInput"
+      />
+    </view>
+
+    <view class="form-item">
+      <text class="label">性别</text>
+      <radio-group class="radio-group" bindchange="onGenderChange" value="{{gender}}">
+        <label class="radio-label {{gender === 'male' ? 'active' : ''}}">
+          <radio value="male" checked="{{gender === 'male'}}" />
+          <view wx:if="{{gender === 'male'}}" class="check-icon">✓</view>
+          <view wx:else class="circle-icon"></view>
+          <text>男</text>
+        </label>
+        <label class="radio-label {{gender === 'female' ? 'active' : ''}}">
+          <radio value="female" checked="{{gender === 'female'}}" />
+          <view wx:if="{{gender === 'female'}}" class="check-icon">✓</view>
+          <view wx:else class="circle-icon"></view>
+          <text>女</text>
+        </label>
+      </radio-group>
+    </view>
+
+    <view class="form-item">
+      <text class="label">出生日期</text>
+      <picker mode="date" value="{{birthDate}}" bindchange="onBirthDateChange" start="1900-01-01" end="2025-12-31">
+        <view class="picker-view">
+          <text class="picker-text">{{birthDate || '01/01/1989'}}</text>
+          <text class="picker-icon">📅</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="form-item">
+      <text class="label">确诊年份</text>
+      <input 
+        class="input" 
+        type="number" 
+        placeholder="例如：2021"
+        placeholder-style="color: #9CA3AF;"
+        value="{{diagnosisYear}}"
+        bindinput="onDiagnosisYearInput"
+      />
+    </view>
+  </view>
+
+  <button class="submit-btn" bindtap="createProfile" loading="{{saving}}" disabled="{{saving}}">
+    立即建立档案
+  </button>
+</view>

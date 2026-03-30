@@ -1,0 +1,110 @@
+<view class="detail-page">
+  <!-- 顶部操作栏 -->
+  <view class="action-bar" wx:if="{{editing}}">
+    <view class="cancel-btn" bindtap="onCancel">取消</view>
+    <view class="save-btn" bindtap="saveData">保存</view>
+  </view>
+  <view class="action-bar" wx:else>
+    <view></view>
+    <view class="edit-link" bindtap="onEdit">编辑</view>
+  </view>
+
+  <view class="card-container">
+    <!-- 1. 基本信息类型 -->
+    <block wx:if="{{type === 'basic'}}">
+      <view class="form-card">
+        <!-- 姓名 -->
+        <view class="form-item">
+          <text class="label">姓名</text>
+          <input class="input {{!editing ? 'readonly' : ''}}" value="{{basicInfo.name}}" data-field="name" bindinput="onBasicInput" disabled="{{!editing}}" />
+        </view>
+        
+        <!-- 性别 -->
+        <view class="form-item">
+          <text class="label">性别</text>
+          <block wx:if="{{editing}}">
+            <radio-group class="gender-radio" bindchange="onGenderChange">
+              <label class="radio-opt {{basicInfo.gender === '男' ? 'active' : ''}}">
+                <radio value="男" checked="{{basicInfo.gender === '男'}}" hidden />
+                <text>男</text>
+              </label>
+              <label class="radio-opt {{basicInfo.gender === '女' ? 'active' : ''}}">
+                <radio value="女" checked="{{basicInfo.gender === '女'}}" hidden />
+                <text>女</text>
+              </label>
+            </radio-group>
+          </block>
+          <view wx:else class="input readonly">{{basicInfo.gender}}</view>
+        </view>
+
+        <!-- 出生日期 -->
+        <view class="form-item">
+          <text class="label">出生日期</text>
+          <picker mode="date" value="{{basicInfo.birthDate}}" bindchange="onBirthDateChange" disabled="{{!editing}}">
+            <view class="input {{!editing ? 'readonly' : ''}}">{{basicInfo.birthDate || '请选择'}}</view>
+          </picker>
+        </view>
+
+        <!-- 确诊年份 -->
+        <view class="form-item">
+          <text class="label">确诊年份</text>
+          <input class="input {{!editing ? 'readonly' : ''}}" type="number" value="{{basicInfo.diagnosisYear}}" data-field="diagnosisYear" bindinput="onBasicInput" disabled="{{!editing}}" />
+        </view>
+
+        <view class="divider"></view>
+
+        <!-- 身体指标 -->
+        <view class="form-row">
+          <view class="form-item half">
+            <text class="label">身高 (cm)</text>
+            <input class="input {{!editing ? 'readonly' : ''}}" type="number" value="{{basicInfo.height}}" data-field="height" bindinput="onBasicInput" disabled="{{!editing}}" />
+          </view>
+          <view class="form-item half">
+            <text class="label">体重 (kg)</text>
+            <input class="input {{!editing ? 'readonly' : ''}}" type="number" value="{{basicInfo.weight}}" data-field="weight" bindinput="onBasicInput" disabled="{{!editing}}" />
+          </view>
+        </view>
+        
+        <view class="form-item">
+          <text class="label">血型</text>
+          <input class="input {{!editing ? 'readonly' : ''}}" value="{{basicInfo.bloodType}}" data-field="bloodType" bindinput="onBasicInput" disabled="{{!editing}}" />
+        </view>
+      </view>
+    </block>
+
+    <!-- 2. 标签类型（过敏史） -->
+    <block wx:if="{{type === 'tags'}}">
+      <view class="form-card">
+        <view class="tags-wrapper">
+          <block wx:if="{{tags.length > 0}}">
+            <view class="tag-chip" wx:for="{{tags}}" wx:key="index">
+              <text>{{item}}</text>
+              <view class="delete-tag" wx:if="{{editing}}" data-index="{{index}}" bindtap="removeTag">×</view>
+            </view>
+          </block>
+          <view class="empty-tags" wx:else>暂无记录</view>
+        </view>
+
+        <view class="add-tag-row" wx:if="{{editing}}">
+          <input class="tag-input" value="{{newTag}}" bindinput="onTagInput" placeholder="输入过敏源..." />
+          <view class="add-btn" bindtap="addTag">添加</view>
+        </view>
+      </view>
+    </block>
+
+    <!-- 3. 文本类型 -->
+    <block wx:if="{{type === 'text'}}">
+      <view class="form-card">
+        <textarea 
+          class="textarea {{!editing ? 'readonly' : ''}}" 
+          value="{{content}}" 
+          bindinput="onContentInput" 
+          placeholder="请详细描述..." 
+          disabled="{{!editing}}"
+          auto-height
+          maxlength="2000"
+        ></textarea>
+      </view>
+    </block>
+  </view>
+</view>

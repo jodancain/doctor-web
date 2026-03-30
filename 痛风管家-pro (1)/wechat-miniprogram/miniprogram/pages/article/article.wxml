@@ -1,0 +1,32 @@
+<view class="container bg-white min-h-screen pb-10" wx:if="{{article}}">
+  <image src="{{article.imageUrl}}" mode="widthFix" class="w-full"></image>
+  
+  <view class="p-6">
+    <view class="text-xs text-teal-600 font-bold mb-2">{{article.category}} • {{article.readTime}}</view>
+    <view class="text-2xl font-bold text-slate-900 mb-6">{{article.title}}</view>
+    
+    <view class="text-slate-600 leading-relaxed space-y-4">
+      <view>
+        痛风是一种常见的关节炎，主要由高尿酸血症引起。当血液中的尿酸水平过高时，尿酸结晶会在关节中沉积，导致剧烈的疼痛、红肿和炎症。
+      </view>
+      <view>
+        <text class="font-bold text-slate-800">为什么会痛风？</text>
+        <view class="mt-2">
+          通常是因为身体产生的尿酸过多，或者肾脏排泄尿酸的能力下降。饮食中摄入过多的嘌呤（如海鲜、红肉、啤酒）也是重要诱因。
+        </view>
+      </view>
+      <view>
+        <text class="font-bold text-slate-800">如何预防？</text>
+        <view class="mt-2">
+          1. 控制饮食：减少高嘌呤食物摄入。<br/>
+          2. 多喝水：每日饮水量保持在2000ml以上。<br/>
+          3. 规律运动：控制体重，避免肥胖。<br/>
+          4. 遵医嘱用药：定期复查尿酸水平。
+        </view>
+      </view>
+      <view class="bg-slate-50 p-4 rounded-xl border-l-4 border-teal-500 text-sm text-slate-500 italic">
+        注：本文仅供参考，具体诊疗请遵医嘱。
+      </view>
+    </view>
+  </view>
+</view>

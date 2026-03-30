@@ -1,0 +1,67 @@
+<view class="container bg-slate-50 min-h-screen pb-20">
+  
+  <!-- Summary Header -->
+  <view class="bg-white p-6 shadow-sm sticky top-0 z-10">
+    <view class="flex justify-between items-end mb-4">
+      <view>
+        <view class="text-slate-500 text-xs">今日摄入</view>
+        <view class="text-3xl font-bold text-slate-800">{{totalCalories}} <text class="text-sm font-normal text-slate-400">kcal</text></view>
+      </view>
+      <view class="text-right">
+        <view class="text-slate-500 text-xs">建议上限</view>
+        <view class="text-xl font-bold text-slate-400">1800</view>
+      </view>
+    </view>
+    
+    <!-- Meal Selector -->
+    <view class="flex bg-slate-100 p-1 rounded-xl">
+      <block wx:for="{{meals}}" wx:key="id">
+        <view class="flex-1 text-center py-2 text-sm rounded-lg transition-all {{selectedMeal === item.id ? 'bg-white text-teal-600 font-bold shadow-sm' : 'text-slate-500'}}"
+              bindtap="selectMeal" data-id="{{item.id}}">
+          {{item.name}}
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- Food List -->
+  <view class="p-4">
+    <view class="text-slate-500 text-sm mb-3">推荐食物</view>
+    <view class="space-y-3">
+      <block wx:for="{{foods}}" wx:key="id">
+        <view class="bg-white p-4 rounded-xl shadow-sm flex justify-between items-center">
+          <view>
+            <view class="font-bold text-slate-800 flex items-center">
+              {{item.name}}
+              <text class="ml-2 text-xs px-1.5 py-0.5 rounded {{item.purine === 'Low' ? 'bg-emerald-50 text-emerald-600' : item.purine === 'Medium' ? 'bg-amber-50 text-amber-600' : 'bg-rose-50 text-rose-600'}}">
+                {{item.purine === 'Low' ? '低嘌呤' : item.purine === 'Medium' ? '中嘌呤' : '高嘌呤'}}
+              </text>
+            </view>
+            <view class="text-xs text-slate-400 mt-1">{{item.calories}} kcal / 100g</view>
+          </view>
+          <button class="bg-teal-50 text-teal-600 text-xs font-bold px-3 py-1.5 rounded-lg border border-teal-100 active:scale-95" 
+                  bindtap="addFood" data-food="{{item}}">
+            + 添加
+          </button>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- Today's Log -->
+  <view class="p-4 pt-0" wx:if="{{todayLogs.length > 0}}">
+    <view class="text-slate-500 text-sm mb-3">今日记录</view>
+    <view class="space-y-2">
+      <block wx:for="{{todayLogs}}" wx:key="id">
+        <view class="bg-white p-3 rounded-lg flex justify-between items-center border border-slate-100">
+          <view class="flex items-center">
+            <text class="text-xs text-slate-400 w-12">{{item.meal === 'breakfast' ? '早餐' : item.meal === 'lunch' ? '午餐' : item.meal === 'dinner' ? '晚餐' : '加餐'}}</text>
+            <text class="text-slate-700 font-medium ml-2">{{item.foodName}}</text>
+          </view>
+          <text class="text-slate-500 text-sm">{{item.calories}} kcal</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+</view>

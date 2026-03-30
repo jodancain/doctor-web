@@ -1,0 +1,375 @@
+/* 基础样式 */
+page {
+  background-color: #F6F8FA;
+  padding-bottom: 40rpx;
+  font-family: -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Helvetica, Segoe UI, Arial, Roboto, 'PingFang SC', 'miui', 'Hiragino Sans GB', 'Microsoft Yahei', sans-serif;
+}
+
+.page-container {
+  padding: 24rpx 32rpx;
+}
+
+/* 患者画像卡片 */
+.patient-header-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
+}
+
+.header-top {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 24rpx;
+}
+
+.avatar {
+  width: 100rpx;
+  height: 100rpx;
+  background: #F3F4F6;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  font-weight: 600;
+  color: #6B7280;
+  margin-right: 24rpx;
+  border: 2rpx solid #F3F4F6;
+}
+
+.info {
+  flex: 1;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8rpx;
+}
+
+.name {
+  font-size: 36rpx;
+  font-weight: 700;
+  color: #111827;
+  margin-right: 16rpx;
+}
+
+.tag {
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  background: #FEF2F2; /* 高危色 */
+  color: #DC2626;
+  border-radius: 8rpx;
+  margin-right: 8rpx;
+}
+
+.tag:last-child {
+  background: #ECFDF5;
+  color: #059669;
+}
+
+.meta-row {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.action-btn {
+  width: 80rpx;
+  height: 80rpx;
+  background: #ECFDF5;
+  border-radius: 20rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #059669;
+}
+
+.diagnosis-row {
+  background: #F9FAFB;
+  padding: 16rpx 24rpx;
+  border-radius: 16rpx;
+  margin-bottom: 24rpx;
+  display: flex;
+  justify-content: space-between;
+}
+
+.diagnosis-row .label {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.diagnosis-row .value {
+  font-size: 26rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.metrics-row {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 8rpx;
+}
+
+.metric {
+  text-align: center;
+  flex: 1;
+}
+
+.metric .label {
+  font-size: 22rpx;
+  color: #9CA3AF;
+  margin-bottom: 8rpx;
+}
+
+.metric .value {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #111827;
+}
+
+.metric .value.highlight {
+  color: #111827;
+}
+
+.metric .value.target {
+  color: #059669;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  background: #E5E7EB;
+  padding: 6rpx;
+  border-radius: 16rpx;
+  margin-bottom: 24rpx;
+}
+
+.tab {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 0;
+  font-size: 26rpx;
+  color: #6B7280;
+  border-radius: 12rpx;
+}
+
+.tab.active {
+  background: #FFFFFF;
+  color: #1F2937;
+  font-weight: 600;
+  box-shadow: 0 2rpx 4rpx rgba(0, 0, 0, 0.05);
+}
+
+/* 卡片样式 */
+.card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 24rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 24rpx;
+}
+
+/* 模拟图表 */
+.chart-placeholder {
+  height: 320rpx;
+  background: #F9FAFB;
+  border-radius: 16rpx;
+  position: relative;
+  border: 1rpx dashed #E5E7EB;
+}
+
+.mock-chart-line {
+  position: absolute;
+  top: 50%;
+  left: 10%;
+  right: 10%;
+  height: 2rpx;
+  background: #E5E7EB;
+}
+
+.point {
+  position: absolute;
+  width: 12rpx;
+  height: 12rpx;
+  background: #FFFFFF;
+  border: 4rpx solid #059669;
+  border-radius: 50%;
+}
+
+/* 用药项 */
+.medication-item {
+  background: #F9FAFB;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.med-name {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4rpx;
+}
+
+.med-desc {
+  font-size: 22rpx;
+  color: #6B7280;
+}
+
+.compliance-tag {
+  font-size: 22rpx;
+  color: #059669;
+  background: #ECFDF5;
+  padding: 6rpx 16rpx;
+  border-radius: 8rpx;
+}
+
+/* 按钮 */
+.outline-btn {
+  width: 100%;
+  background: #FFFFFF;
+  border: 1rpx solid #E5E7EB;
+  color: #4B5563;
+  font-size: 28rpx;
+  border-radius: 48rpx;
+  padding: 24rpx 0;
+  font-weight: 500;
+}
+
+.primary-btn {
+  background: #059669;
+  color: #FFFFFF;
+  border-radius: 48rpx;
+  font-size: 30rpx;
+  padding: 24rpx 0;
+  width: 100%;
+  text-align: center;
+  font-weight: 500;
+}
+
+.fab-btn {
+  position: fixed;
+  bottom: 64rpx;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 300rpx;
+  box-shadow: 0 8rpx 24rpx rgba(5, 150, 105, 0.2);
+  z-index: 100;
+}
+
+/* 时间轴 */
+.timeline {
+  padding-left: 16rpx;
+}
+
+.timeline-item {
+  display: flex;
+  margin-bottom: 32rpx;
+}
+
+.timeline-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 24rpx;
+}
+
+.dot {
+  width: 20rpx;
+  height: 20rpx;
+  background: #10B981;
+  border-radius: 50%;
+  margin-bottom: 8rpx;
+  border: 4rpx solid #ECFDF5;
+}
+
+.line {
+  flex: 1;
+  width: 2rpx;
+  background: #E5E7EB;
+}
+
+.timeline-item:last-child .line {
+  display: none;
+}
+
+.timeline-content {
+  flex: 1;
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.date-row .date {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #111827;
+  margin-right: 16rpx;
+}
+
+.type-tag {
+  font-size: 20rpx;
+  color: #6B7280;
+  background: #F3F4F6;
+  padding: 2rpx 8rpx;
+  border-radius: 4rpx;
+}
+
+.record-card {
+  background: #FFFFFF;
+  padding: 24rpx;
+  border-radius: 16rpx;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.02);
+  border: 1rpx solid #F9FAFB;
+}
+
+.record-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12rpx;
+}
+
+.record-title {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #1F2937;
+}
+
+.edit-btn {
+  font-size: 22rpx;
+  color: #6B7280;
+}
+
+.record-desc {
+  font-size: 26rpx;
+  color: #4B5563;
+  margin-bottom: 16rpx;
+  line-height: 1.5;
+}
+
+.doctor-sign {
+  font-size: 22rpx;
+  color: #6B7280;
+  display: flex;
+  align-items: center;
+}
+
+.doctor-sign .icon {
+  margin-right: 8rpx;
+  color: #8B5CF6;
+}
+

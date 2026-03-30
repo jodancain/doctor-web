@@ -1,0 +1,47 @@
+/* pages/doctor/home/home.wxss */
+.container {
+  background-color: #f8fafc;
+}
+
+.bg-indigo-100 { background-color: #e0e7ff; }
+.text-indigo-600 { color: #4f46e5; }
+.border-indigo-50 { border-color: #eef2ff; }
+.bg-indigo-50 { background-color: #eef2ff; }
+
+.text-emerald-600 { color: #059669; }
+.bg-emerald-50 { background-color: #ecfdf5; }
+
+.text-rose-600 { color: #e11d48; }
+.bg-rose-50 { background-color: #fff1f2; }
+
+.text-amber-600 { color: #d97706; }
+.bg-amber-50 { background-color: #fffbeb; }
+
+.text-slate-900 { color: #0f172a; }
+.text-slate-800 { color: #1e293b; }
+.text-slate-500 { color: #64748b; }
+.text-slate-400 { color: #94a3b8; }
+.bg-slate-50 { background-color: #f8fafc; }
+.bg-slate-100 { background-color: #f1f5f9; }
+.border-slate-100 { border-color: #f1f5f9; }
+
+.rounded-xl { border-radius: 0.75rem; }
+.rounded-full { border-radius: 9999px; }
+
+.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+
+.grid { display: grid; }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gap-4 { gap: 1rem; }
+.space-x-4 > view + view { margin-left: 1rem; }
+.space-x-3 > view + view { margin-left: 0.75rem; }
+.space-y-3 > view + view { margin-top: 0.75rem; }
+
+.ml-2 { margin-left: 0.5rem; }
+.ml-1 { margin-left: 0.25rem; }
+.mt-1 { margin-top: 0.25rem; }
+.mt-0.5 { margin-top: 0.125rem; }
+.mt-6 { margin-top: 1.5rem; }
+.mb-6 { margin-bottom: 1.5rem; }
+.mb-4 { margin-bottom: 1rem; }
+.mb-1 { margin-bottom: 0.25rem; }

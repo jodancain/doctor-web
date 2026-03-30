@@ -1,0 +1,18 @@
+page, view, text, image, navigator, input, button, textarea {
+  box-sizing: border-box;
+}
+
+button {
+  background: initial;
+  font-weight: normal;
+}
+
+button::after {
+  border: none;
+}
+
+image {
+  display: block;
+  width: 100%;
+}
+

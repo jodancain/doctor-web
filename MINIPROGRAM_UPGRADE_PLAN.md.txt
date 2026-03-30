@@ -1,0 +1,52 @@
+# 小程序端问卷功能升级计划 (V1.0)
+
+## 1. 现状分析
+当前小程序 (\miniprogram\) 包含首页、健康档案、问诊、记录（尿酸、发作、饮水等）和资源库等模块。
+为了与 Web 医生端的问卷系统闭环匹配，小程序端需要新增**问卷接收与填写**的能力。
+
+## 2. 新增页面规划
+
+### 2.1 问卷填写页 (\packages/records/questionnaire/detail\)
+- **路径**: \/packages/records/questionnaire/detail?id=xxx&taskId=yyy\
+- **功能**: 
+  - 根据传入的 \id\ 从云数据库 \questionnaires\ 集合拉取问卷 JSON 结构。
+  - 动态渲染表单组件：
+    - \single_choice\: \<radio-group>\
+    - \multiple_choice\: \<checkbox-group>\
+    - \	ext\: \<textarea>\
+    - \ating\: 自定义星星评分组件或滑动条
+  - 提交校验：检查 \equired\ 字段。
+  - 提交动作：将结果写入 \questionnaireRecords\ 集合，若存在 \	askId\，则同步更新 \patientTasks\ 状态为 \completed\。
+
+## 3. 现有页面改造
+
+### 3.1 首页 (\pages/home/index\) - 待办中心
+- **现状**: 首页已有 \	odoList\ (今日待办) 模块，目前是硬编码的静态数据（吃药、喝水、复诊）。
+- **改造**:
+  - 在 \onShow\ 或 \loadSummary\ 中，增加对 \patientTasks\ 集合的查询。
+  - 筛选条件：\_openid\ 为当前用户，且 \status: 'pending'\。
+  - 将查询到的待填写问卷任务动态插入到 \	odoList\ 中。
+  - 点击任务时，跳转至 \/packages/records/questionnaire/detail?id=xxx&taskId=yyy\。
+
+### 3.2 app.json 路由注册
+- 在 \subpackages\ 的 \ecords\ 分包中，注册新的页面路径：
+  \questionnaire/detail/index\
+
+## 4. 微信能力对接
+
+### 4.1 订阅消息 (Subscribe Message)
+- **模板申请**：在微信公众平台后台申请
+健康问卷提醒或服务进度通知类模板。
+- **授权弹窗**：在小程序合适的时机（如登录后、或首页顶部提示），调用 \wx.requestSubscribeMessage\ 引导患者授权接收通知。
+- **云函数下发**：配合医生端的定向下发功能，编写云函数 \sendQuestionnaireMsg\，调用微信服务端 API 向患者发送模板消息。
+
+### 4.2 小程序码 (扫码直达)
+- 配合医生端的通用链接/二维码功能，确保小程序能处理启动参数。
+- 在 \pp.js\ 的 \onLaunch\ 或问卷详情页的 \onLoad(options)\ 中，解析 \scene\ 参数获取问卷 ID。
+
+## 5. 实施步骤
+1. **第一步 (配置层)**：在微信公众平台申请订阅消息模板，记录 Template ID。
+2. **第二步 (页面开发)**：在 \packages/records\ 下新建 \questionnaire\ 文件夹，完成动态表单页面的 UI 和逻辑开发。
+3. **第三步 (首页接入)**：修改 \pages/home/index.js\，接入云数据库拉取真实待办任务。
+4. **第四步 (云函数)**：编写并部署发送订阅消息的云函数。
+5. **第五步 (联调测试)**：使用医生端下发问卷 -> 小程序收到微信通知 -> 首页显示待办 -> 点击填写并提交 -> 医生端查看结果，完成全链路闭环测试。

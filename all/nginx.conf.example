@@ -1,0 +1,32 @@
+# 片段示例：请根据实际域名、证书路径修改后并入 /etc/nginx/sites-available/
+# 假设上游医生端容器映射在宿主机 127.0.0.1:3000
+
+upstream goutcare_doctor {
+    server 127.0.0.1:3000;
+    keepalive 32;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name your-domain.example.com;
+
+    ssl_certificate     /etc/nginx/ssl/fullchain.pem;
+    ssl_certificate_key /etc/nginx/ssl/privkey.pem;
+
+    location / {
+        proxy_pass http://goutcare_doctor;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto https;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+
+server {
+    listen 80;
+    server_name your-domain.example.com;
+    return 301 https://$host$request_uri;
+}

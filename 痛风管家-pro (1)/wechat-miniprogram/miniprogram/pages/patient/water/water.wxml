@@ -1,0 +1,35 @@
+<view class="container bg-blue-50 min-h-screen flex flex-col">
+  
+  <!-- Progress Circle -->
+  <view class="flex-1 flex flex-col items-center justify-center p-10">
+    <view class="relative w-64 h-64 flex items-center justify-center">
+      <!-- Background Circle -->
+      <view class="absolute w-full h-full rounded-full border-8 border-blue-100"></view>
+      <!-- Progress (Simplified as text/color for demo, real app would use canvas or svg) -->
+      <view class="absolute w-full h-full rounded-full border-8 border-blue-400" style="clip-path: inset({{100 - percentage}}% 0 0 0); transition: clip-path 1s;"></view>
+      
+      <view class="text-center z-10">
+        <view class="text-5xl font-bold text-blue-600">{{percentage}}%</view>
+        <view class="text-blue-400 text-sm mt-2">{{current}} / {{goal}} ml</view>
+      </view>
+    </view>
+    <view class="mt-8 text-blue-500 text-sm font-medium">多喝水有助于尿酸排泄</view>
+  </view>
+
+  <!-- Quick Add -->
+  <view class="bg-white rounded-t-3xl p-8 shadow-lg">
+    <view class="text-slate-800 font-bold mb-6 text-center">快速记录</view>
+    <view class="grid grid-cols-4 gap-4">
+      <block wx:for="{{containers}}" wx:key="type">
+        <view class="flex flex-col items-center" bindtap="addWater" data-item="{{item}}">
+          <view class="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl mb-2 active:scale-95 transition-all shadow-sm">
+            {{item.icon}}
+          </view>
+          <view class="text-xs text-slate-500">{{item.name}}</view>
+          <view class="text-xs text-slate-300">{{item.amount}}ml</view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+</view>

@@ -1,0 +1,123 @@
+<view class="page-container">
+  <!-- 患者画像卡片 -->
+  <view class="patient-header-card">
+    <view class="header-top">
+      <view class="avatar">{{patient.name[0]}}</view>
+      <view class="info">
+        <view class="name-row">
+          <text class="name">{{patient.name}}</text>
+          <view class="tags">
+            <text class="tag" wx:for="{{patient.tags}}" wx:key="*this">{{item}}</text>
+          </view>
+        </view>
+        <view class="meta-row">
+          <text>{{patient.gender}} • {{patient.age}}岁 • ID: {{patient.id}}</text>
+        </view>
+      </view>
+      <view class="actions">
+        <view class="action-btn" bindtap="sendMessage">
+          <text class="icon">💬</text>
+        </view>
+      </view>
+    </view>
+    
+    <view class="diagnosis-row">
+      <text class="label">主要诊断</text>
+      <text class="value">{{patient.diagnosis}}</text>
+    </view>
+
+    <view class="metrics-row">
+      <view class="metric">
+        <view class="label">当前尿酸</view>
+        <view class="value highlight">{{summary.currentUA}}</view>
+      </view>
+      <view class="metric">
+        <view class="label">目标值</view>
+        <view class="value target">{{summary.targetUA}}</view>
+      </view>
+      <view class="metric">
+        <view class="label">BMI</view>
+        <view class="value">{{patient.bmi}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 功能标签页 -->
+  <view class="tabs">
+    <view class="tab {{activeTab === 'overview' ? 'active' : ''}}" bindtap="switchTab" data-tab="overview">概览</view>
+    <view class="tab {{activeTab === 'trend' ? 'active' : ''}}" bindtap="switchTab" data-tab="trend">趋势</view>
+    <view class="tab {{activeTab === 'medication' ? 'active' : ''}}" bindtap="switchTab" data-tab="medication">用药</view>
+    <view class="tab {{activeTab === 'records' ? 'active' : ''}}" bindtap="switchTab" data-tab="records">档案</view>
+  </view>
+
+  <!-- 内容区域 -->
+  <view class="content-area">
+    
+    <!-- 概览视图 -->
+    <view wx:if="{{activeTab === 'overview'}}">
+      <!-- 趋势图占位 -->
+      <view class="card">
+        <view class="card-title">尿酸控制趋势</view>
+        <view class="chart-placeholder">
+          <!-- 这里应该放置 canvas 图表 -->
+          <view class="mock-chart-line"></view>
+          <view class="mock-points">
+            <view class="point" style="bottom: 60%; left: 10%"></view>
+            <view class="point" style="bottom: 40%; left: 30%"></view>
+            <view class="point" style="bottom: 30%; left: 50%"></view>
+            <view class="point" style="bottom: 35%; left: 70%"></view>
+            <view class="point" style="bottom: 20%; left: 90%"></view>
+          </view>
+        </view>
+      </view>
+
+      <!-- 当前用药 -->
+      <view class="card">
+        <view class="card-title">当前用药</view>
+        <view class="medication-item">
+          <view class="med-info">
+            <view class="med-name">{{summary.medication}}</view>
+            <view class="med-desc">40mg • 每日一次</view>
+          </view>
+          <view class="compliance-tag">{{summary.compliance}}</view>
+        </view>
+      </view>
+
+      <button class="outline-btn" bindtap="viewHealthProfile">📄 查看健康档案</button>
+    </view>
+
+    <!-- 档案视图 (病历列表) -->
+    <view wx:if="{{activeTab === 'records'}}">
+      <view class="timeline">
+        <block wx:for="{{timeline}}" wx:key="date">
+          <view class="timeline-item">
+            <view class="timeline-left">
+              <view class="dot"></view>
+              <view class="line"></view>
+            </view>
+            <view class="timeline-content">
+              <view class="date-row">
+                <text class="date">{{item.date}}</text>
+                <text class="type-tag">{{item.type}}</text>
+              </view>
+              <view class="record-card">
+                <view class="record-header">
+                  <text class="record-title">{{item.title}}</text>
+                  <view class="edit-btn">✎ 编辑</view>
+                </view>
+                <view class="record-desc">{{item.desc}}</view>
+                <view class="doctor-sign">
+                  <text class="icon">🩺</text> {{item.doctor}}
+                </view>
+              </view>
+            </view>
+          </view>
+        </block>
+      </view>
+      
+      <button class="primary-btn fab-btn" bindtap="addMedicalRecord">+ 新建病历</button>
+    </view>
+
+  </view>
+</view>
+

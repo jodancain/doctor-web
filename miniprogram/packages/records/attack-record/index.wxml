@@ -1,0 +1,218 @@
+<view class="page-container">
+  <!-- Tab切换 -->
+  <view class="tab-bar">
+    <view 
+      class="tab-item {{activeTab === 'record' ? 'active' : ''}}"
+      data-tab="record"
+      bindtap="onTabChange"
+    >
+      记录发作
+    </view>
+    <view 
+      class="tab-item {{activeTab === 'stats' ? 'active' : ''}}"
+      data-tab="stats"
+      bindtap="onTabChange"
+    >
+      发作统计
+    </view>
+  </view>
+
+  <!-- 记录发作页面 -->
+  <view class="tab-content" wx:if="{{activeTab === 'record'}}">
+    <view class="section-title">记录发作</view>
+  
+  <!-- 1. 疼痛位置 -->
+  <view class="card">
+    <view class="card-title">1. 疼痛位置<text style="font-size: 24rpx; color: #9CA3AF; margin-left: 16rpx; font-weight: normal;">(选择疼痛位置)</text></view>
+    <view class="tag-grid">
+      <block wx:for="{{jointOptions}}" wx:key="*this">
+        <view 
+          class="tag {{utils.includes(selectedJoints, item) ? 'active' : ''}}" 
+          bindtap="toggleJoint" 
+          data-value="{{item}}"
+        >
+          {{item}}
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 2. 疼痛程度 -->
+  <view class="card">
+    <view class="card-title">2. 疼痛程度</view>
+    <view class="pain-slider-container">
+      <view class="emoji-face">
+        <!-- 暂用 text emoji 替代 image，避免资源 404 -->
+        <text style="font-size: 80rpx;">{{painEmoji}}</text>
+        <!-- <image src="{{painEmoji}}" mode="aspectFit" class="emoji-img"></image> -->
+      </view>
+      <view class="score-display">
+        <text class="score" style="color: {{painColor}}">{{painLevel}}</text>
+        <text class="max-score">/ 10</text>
+      </view>
+      <slider 
+        min="0" 
+        max="10" 
+        step="1" 
+        value="{{painLevel}}" 
+        activeColor="{{painColor}}" 
+        block-size="24"
+        bindchanging="onPainChange"
+        bindchange="onPainChange"
+      />
+      <view class="slider-labels">
+        <text>无痛</text>
+        <text>剧痛</text>
+      </view>
+      <view class="pain-reference" style="font-size: 24rpx; color: #6B7280; margin-top: 16rpx; text-align: left; background: #F3F4F6; padding: 16rpx; border-radius: 8rpx; line-height: 1.6;">
+        <view>0-2分(一级)：轻微疼痛</view>
+        <view>3-4分(二级)：属于轻疼痛走路会疼痛</view>
+        <view>5-6分(三级)：属于很疼痛强忍着可以活动</view>
+        <view>7-8分(四级)：半身瘫痪上半身强忍疼痛剧烈</view>
+        <view>9-10分(五级)：全身瘫痪只能卧床</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 3. 可能诱因 -->
+  <view class="card">
+    <view class="card-title">3. 可能诱因</view>
+    <view class="tag-grid">
+      <block wx:for="{{triggerOptions}}" wx:key="*this">
+        <view 
+          class="tag outline {{utils.includes(selectedTriggers, item) ? 'active' : ''}}" 
+          bindtap="toggleTrigger" 
+          data-value="{{item}}"
+        >
+          {{item}}
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 4. 持续时间 -->
+  <view class="card">
+    <view class="card-title">4. 持续时间</view>
+    <view class="tag-grid">
+      <block wx:for="{{durationOptions}}" wx:key="*this">
+        <view 
+          class="tag outline {{selectedDuration === item ? 'active' : ''}}" 
+          bindtap="toggleDuration" 
+          data-value="{{item}}"
+        >
+          {{item}}
+        </view>
+      </block>
+    </view>
+  </view>
+
+    <!-- 底部按钮 -->
+    <view class="footer">
+      <button class="submit-btn" bindtap="submitRecord" loading="{{submitting}}">完成记录</button>
+    </view>
+  </view>
+
+  <!-- 发作统计页面 -->
+  <view class="tab-content" wx:if="{{activeTab === 'stats'}}">
+    <!-- 摘要统计 -->
+    <view class="stats-summary">
+      <view class="summary-card">
+        <view class="summary-icon">📊</view>
+        <view class="summary-value">{{stats.totalAttacks}}</view>
+        <view class="summary-label">累计发作</view>
+      </view>
+      <view class="summary-card">
+        <view class="summary-icon">🔥</view>
+        <view class="summary-value">{{stats.maxPain}}</view>
+        <view class="summary-label">最高疼痛</view>
+        <view class="summary-desc">{{stats.maxPainLabel}}</view>
+      </view>
+    </view>
+
+    <!-- 诱因分析 -->
+    <view class="card" wx:if="{{!loadingStats}}">
+      <view class="card-title">诱因分析</view>
+      <canvas 
+        id="pie-chart" 
+        type="2d" 
+        class="pie-chart"
+        wx:if="{{stats.triggerStats.length > 0}}"
+      ></canvas>
+      <view class="chart-legend" wx:if="{{stats.triggerStats.length > 0}}">
+        <block wx:for="{{stats.triggerStats}}" wx:key="name">
+          <view class="legend-item">
+            <view class="legend-color" style="background-color: {{index < 5 ? ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6'][index] : '#999'}};"></view>
+            <text class="legend-text">{{item.name}}</text>
+          </view>
+        </block>
+      </view>
+      <view class="empty-chart" wx:if="{{stats.triggerStats.length === 0 && !loadingStats}}">
+        <text>暂无数据</text>
+      </view>
+    </view>
+
+    <!-- 高频发作部位 -->
+    <view class="card" wx:if="{{stats.jointStats.length > 0}}">
+      <view class="card-title">高频发作部位</view>
+      <view class="joint-stats">
+        <block wx:for="{{stats.jointStats}}" wx:key="name" wx:for-index="idx">
+          <view class="joint-item">
+            <view class="joint-rank">{{idx + 1}}.</view>
+            <view class="joint-name">{{item.name}}</view>
+            <view class="joint-bar-wrapper">
+              <view 
+                class="joint-bar" 
+                style="width: {{item.percentage}}%;"
+              ></view>
+            </view>
+            <view class="joint-count">{{item.count}}次</view>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 发作历史 -->
+    <view class="card" wx:if="{{stats.history.length > 0}}">
+      <view class="card-title">发作历史</view>
+      <view class="history-list">
+        <block wx:for="{{stats.history}}" wx:key="createdAt">
+          <view class="history-item">
+            <view class="history-date">{{item.date}}</view>
+            <view class="history-content">
+              <view class="history-joint">
+                <text wx:for="{{item.joints}}" wx:key="*this" wx:for-item="joint" wx:for-index="jointIdx">
+                  {{joint}}<text wx:if="{{jointIdx < item.joints.length - 1}}">、</text>
+                </text>
+              </view>
+              <view class="history-meta">
+                <view class="{{item.painLevel >= 7 ? 'pain-tag high' : (item.painLevel >= 4 ? 'pain-tag medium' : 'pain-tag low')}}">疼痛 {{item.painLevel}}级</view>
+                <view class="pain-tag" style="background: #F3F4F6; color: #4B5563;" wx:if="{{item.duration}}">持续 {{item.duration}}</view>
+                <view class="history-triggers">
+                  <text 
+                    class="trigger-tag" 
+                    wx:for="{{item.triggers}}" 
+                    wx:key="*this"
+                    wx:for-item="trigger"
+                  >
+                    {{trigger}}
+                  </text>
+                </view>
+              </view>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 空状态 -->
+    <view class="empty-state" wx:if="{{stats.history.length === 0 && stats.totalAttacks === 0}}">
+      <text>暂无发作记录</text>
+    </view>
+  </view>
+</view>
+
+<wxs module="utils">
+module.exports.includes = function(arr, item) {
+  return arr.indexOf(item) > -1;
+}
+</wxs>

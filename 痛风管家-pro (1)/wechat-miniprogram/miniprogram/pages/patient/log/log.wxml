@@ -1,0 +1,66 @@
+<view class="container bg-slate-50 min-h-screen p-6">
+  <view class="bg-white rounded-2xl shadow-sm p-6">
+    
+    <!-- Date & Time -->
+    <view class="flex space-x-4 mb-6">
+      <picker mode="date" value="{{date}}" bindchange="bindDateChange" class="flex-1">
+        <view class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+          <view class="text-xs text-slate-400 mb-1">日期</view>
+          <view class="font-bold text-slate-800">{{date}}</view>
+        </view>
+      </picker>
+      <picker mode="time" value="{{time}}" bindchange="bindTimeChange" class="flex-1">
+        <view class="bg-slate-50 p-3 rounded-xl border border-slate-200 text-center">
+          <view class="text-xs text-slate-400 mb-1">时间</view>
+          <view class="font-bold text-slate-800">{{time}}</view>
+        </view>
+      </picker>
+    </view>
+
+    <!-- UA Form -->
+    <block wx:if="{{type === 'ua'}}">
+      <view class="mb-8">
+        <view class="text-slate-500 text-sm mb-2">尿酸值 (µmol/L)</view>
+        <view class="flex items-center border-b-2 border-teal-500 py-2">
+          <input type="number" class="flex-1 text-4xl font-bold text-slate-800 text-center" placeholder="0" value="{{uaValue}}" bindinput="onUAInput" focus/>
+        </view>
+        <view class="mt-2 text-center text-xs text-slate-400">
+          参考范围: 男性 200-420, 女性 150-360
+        </view>
+      </view>
+    </block>
+
+    <!-- Attack Form -->
+    <block wx:if="{{type === 'attack'}}">
+      <view class="mb-6">
+        <view class="text-slate-500 text-sm mb-2">发作部位</view>
+        <input class="w-full bg-slate-50 p-3 rounded-xl border border-slate-200 text-slate-800" placeholder="例如：左脚大拇指" value="{{bodyPart}}" bindinput="onBodyPartInput"/>
+      </view>
+
+      <view class="mb-6">
+        <view class="flex justify-between mb-2">
+          <text class="text-slate-500 text-sm">疼痛等级 (0-10)</text>
+          <text class="font-bold text-rose-600">{{painLevel}}</text>
+        </view>
+        <slider min="0" max="10" value="{{painLevel}}" activeColor="#e11d48" bindchange="onPainChange"/>
+      </view>
+
+      <view class="mb-6">
+        <view class="text-slate-500 text-sm mb-3">诱发因素 (多选)</view>
+        <view class="flex flex-wrap gap-2">
+          <block wx:for="{{triggerOptions}}" wx:key="*this">
+            <view class="px-3 py-1.5 rounded-lg text-sm border transition-all {{triggers.indexOf(item) > -1 ? 'bg-teal-50 border-teal-500 text-teal-700 font-bold' : 'bg-white border-slate-200 text-slate-500'}}" 
+                  bindtap="toggleTrigger" data-item="{{item}}">
+              {{item}}
+            </view>
+          </block>
+        </view>
+      </view>
+    </block>
+
+    <button class="w-full bg-teal-600 text-white font-bold py-3 rounded-xl shadow-lg active:scale-95 transition-all mt-4" bindtap="submit" disabled="{{submitting}}">
+      保存记录
+    </button>
+
+  </view>
+</view>

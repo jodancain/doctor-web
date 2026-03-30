@@ -1,0 +1,59 @@
+<wxs module="utils">
+  function formatTime(timestamp) {
+    if (!timestamp) return '';
+    var date = getDate(timestamp);
+    var now = getDate();
+    var diff = now.getTime() - date.getTime();
+    
+    if (diff < 86400000) {
+      var h = date.getHours();
+      var m = date.getMinutes();
+      return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+    } else if (diff < 172800000) {
+      return '昨天';
+    } else {
+      var mo = date.getMonth() + 1;
+      var d = date.getDate();
+      return mo + '/' + d;
+    }
+  }
+  function getFirstChar(str) {
+    if (!str) return '';
+    return str.substring(0, 1);
+  }
+  module.exports = {
+    formatTime: formatTime,
+    getFirstChar: getFirstChar
+  };
+</wxs>
+
+<view class="inbox-page">
+  <view class="header">
+    <view class="title">消息列表</view>
+  </view>
+
+  <view class="inbox-list" wx:if="{{conversations.length}}">
+    <block wx:for="{{conversations}}" wx:key="partnerOpenid">
+      <view class="inbox-item-wrapper">
+        <view class="inbox-item" bindtap="goChat" data-item="{{item}}" bindlongpress="showDeleteAction">
+          <view class="avatar">{{utils.getFirstChar(item.partnerName)}}</view>
+          <view class="content-area">
+            <view class="top-row">
+              <text class="name">{{item.partnerName}}</text>
+              <text class="time">{{utils.formatTime(item.lastTime)}}</text>
+            </view>
+            <view class="bottom-row">
+              <text class="message text-ellipsis">{{item.lastContent}}</text>
+              <view class="badge" wx:if="{{item.unread > 0}}">{{item.unread}}</view>
+            </view>
+          </view>
+        </view>
+        <!-- 删除按钮 (滑动或长按触发) -->
+      </view>
+    </block>
+  </view>
+
+  <view class="empty-state" wx:if="{{!conversations.length && !loading}}">
+    暂无消息，快去咨询医生吧
+  </view>
+</view>

@@ -1,0 +1,27 @@
+<view class="container h-full bg-slate-50 flex flex-col items-center justify-center p-6">
+  <view class="w-24 h-24 bg-gradient-to-tr from-teal-400 to-emerald-600 rounded-3xl shadow-xl flex items-center justify-center mb-8 rotate-3" style="background: linear-gradient(to top right, #2dd4bf, #059669);">
+    <text class="text-4xl text-white font-bold" style="font-size: 2.25rem;">痛</text>
+  </view>
+  
+  <view class="text-3xl font-bold text-slate-900 mb-2 text-center" style="font-size: 1.875rem; color: #0f172a; margin-bottom: 0.5rem;">痛风管家 Pro</view>
+  
+  <view class="text-slate-500 text-center mb-10 max-w-xs leading-relaxed" style="color: #64748b; margin-bottom: 2.5rem; line-height: 1.625;">
+    痛风与高尿酸血症全病程慢病管理平台
+  </view>
+
+  <view class="space-y-4 w-full" style="width: 100%;">
+    <button class="w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-xl shadow-lg shadow-teal-200 active:scale-95 transition-all" 
+            style="background-color: #0d9488; color: white; border-radius: 0.75rem; margin-bottom: 1rem;"
+            bindtap="onChoosePatient">
+      我是患者
+    </button>
+    
+    <button class="w-full bg-white text-slate-700 font-bold py-3 px-4 rounded-xl border border-slate-200 shadow-sm active:scale-95 transition-all" 
+            style="background-color: white; color: #334155; border: 1px solid #e2e8f0; border-radius: 0.75rem;"
+            bindtap="onChooseDoctor">
+      我是医生
+    </button>
+  </view>
+  
+  <view class="absolute bottom-8 text-xs text-slate-400" style="position: absolute; bottom: 2rem; font-size: 0.75rem; color: #94a3b8;">v1.0.0 • 概念演示</view>
+</view>

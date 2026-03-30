@@ -1,0 +1,62 @@
+/* pages/patient/home/home.wxss */
+.container {
+  background-color: #f1f5f9;
+}
+
+.bg-teal-600 { background-color: #0d9488; }
+.bg-teal-500 { background-color: #14b8a6; }
+.bg-teal-700 { background-color: #0f766e; }
+.text-teal-200 { color: #99f6e4; }
+.border-teal-400 { border-color: #2dd4bf; }
+
+.bg-emerald-100 { background-color: #d1fae5; }
+.text-emerald-700 { color: #047857; }
+.bg-amber-100 { background-color: #fef3c7; }
+.text-amber-700 { color: #b45309; }
+.bg-rose-100 { background-color: #ffe4e6; }
+.text-rose-700 { color: #be123c; }
+.bg-rose-50 { background-color: #fff1f2; }
+.text-rose-600 { color: #e11d48; }
+.border-rose-200 { border-color: #fecdd3; }
+
+.bg-orange-100 { background-color: #ffedd5; }
+.text-orange-600 { color: #ea580c; }
+.bg-blue-100 { background-color: #dbeafe; }
+.text-blue-600 { color: #2563eb; }
+.text-amber-500 { color: #f59e0b; }
+
+.text-slate-800 { color: #1e293b; }
+.text-slate-700 { color: #334155; }
+.text-slate-500 { color: #64748b; }
+.text-slate-400 { color: #94a3b8; }
+.text-slate-300 { color: #cbd5e1; }
+.bg-slate-100 { background-color: #f1f5f9; }
+.bg-slate-200 { background-color: #e2e8f0; }
+
+.rounded-b-3xl { border-bottom-left-radius: 1.5rem; border-bottom-right-radius: 1.5rem; }
+.rounded-2xl { border-radius: 1rem; }
+.rounded-xl { border-radius: 0.75rem; }
+.rounded-lg { border-radius: 0.5rem; }
+.rounded-full { border-radius: 9999px; }
+
+.shadow-lg { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); }
+.shadow-xl { box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+.shadow-sm { box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
+.shadow-md { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+
+.grid { display: grid; }
+.grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.gap-4 { gap: 1rem; }
+.space-x-3 > view + view, .space-x-3 > text + text, .space-x-3 > button + button { margin-left: 0.75rem; }
+.space-y-3 > view + view { margin-top: 0.75rem; }
+.space-y-4 > view + view { margin-top: 1rem; }
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+
+.pb-20 { padding-bottom: 5rem; }
+.mt-16 { margin-top: 4rem; }

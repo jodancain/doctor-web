@@ -1,0 +1,20 @@
+# 在 all 目录执行: docker compose up -d --build
+# 构建需要能访问 npm registry；首次构建会下载依赖并编译前端
+
+services:
+  doctor-portal:
+    build:
+      context: "../goutcare---doctor-portal (1)"
+      dockerfile: Dockerfile
+      args:
+        GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    image: goutcare-doctor-portal:latest
+    container_name: goutcare-doctor-portal
+    restart: unless-stopped
+    ports:
+      - "${HOST_PORT:-3000}:3000"
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: production
+      PORT: "3000"

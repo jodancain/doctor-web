@@ -1,0 +1,46 @@
+<wxs module="utils">
+  function getFirstChar(str) {
+    if (!str) return '用';
+    return str.substring(0, 1);
+  }
+  module.exports = {
+    getFirstChar: getFirstChar
+  };
+</wxs>
+
+<view class="account-page">
+  <view class="header">
+    <view class="title">账号中心</view>
+    <view class="subtitle">管理登录、资料和身份</view>
+  </view>
+
+  <view class="card user-card">
+    <view class="avatar">{{utils.getFirstChar(user && (user.nickName || user.username))}}</view>
+    <view class="meta">
+      <view class="name">{{(user && (user.nickName || user.username)) || '未登录'}}</view>
+      <view class="role-badge {{user && user.role === 'doctor' ? 'doctor' : ''}}">
+        {{user && user.role === 'doctor' ? '医生账号' : '非医生账号'}}
+      </view>
+    </view>
+    <button class="ghost" size="mini" bindtap="goAuth" wx:if="{{!user}}">登录/注册</button>
+  </view>
+
+  <view class="card" wx:if="{{user}}">
+    <view class="section-title">个人资料</view>
+    <view class="field">
+      <text class="label">昵称</text>
+      <input class="input" value="{{form.nickName}}" data-field="nickName" bindinput="onInput" placeholder="请输入昵称" />
+    </view>
+    <view class="field">
+      <text class="label">头像链接</text>
+      <input class="input" value="{{form.avatar}}" data-field="avatar" bindinput="onInput" placeholder="可粘贴头像 URL" />
+    </view>
+    <button class="primary" bindtap="saveProfile" loading="{{saving}}" disabled="{{saving}}">保存资料</button>
+  </view>
+
+  <view class="card danger-card" wx:if="{{user}}">
+    <view class="section-title">账户切换</view>
+    <view class="desc">清空当前登录信息，重新选择医生/非医生账号</view>
+    <button class="danger" bindtap="switchAccount">切换/退出登录</button>
+  </view>
+</view>

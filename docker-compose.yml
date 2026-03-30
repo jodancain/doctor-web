@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # ==================== MongoDB ====================
+  mongodb:
+    image: mongo:6.0
+    container_name: goutcare-mongo
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD:-GoutCare2026Secure}
+      MONGO_INITDB_DATABASE: goutcare
+    volumes:
+      - mongo_data:/data/db
+      - ./mongo-init.js:/docker-entrypoint-initdb.d/init.js:ro
+    ports:
+      - "127.0.0.1:27017:27017"   # 仅本机可访问，不暴露到公网
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ==================== 后端服务 ====================
+  backend:
+    build:
+      context: "./goutcare---doctor-portal (1)"
+    container_name: goutcare-backend
+    restart: always
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - MONGO_URI=mongodb://admin:${MONGO_PASSWORD:-GoutCare2026Secure}@mongodb:27017/goutcare?authSource=admin
+      - JWT_SECRET=${JWT_SECRET:-please-change-this-jwt-secret-in-production}
+      - WX_APPID=wx88328469a06c102e
+      - WX_SECRET=${WX_SECRET:-}
+      - DOCTOR_REGISTER_CODE=${DOCTOR_REGISTER_CODE:-18736}
+      - YUANQI_APP_ID=${YUANQI_APP_ID:-kGvJbghrVRcy}
+      - YUANQI_APP_KEY=${YUANQI_APP_KEY:-}
+      - APP_BASE_URL=https://yundongyl.cn
+      - CORS_ORIGINS=https://yundongyl.cn
+      - COOKIE_SECURE=true
+      - LOG_LEVEL=info
+    volumes:
+      - uploads_data:/app/uploads    # 图片上传持久化
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ==================== Nginx 反向代理 ====================
+  nginx:
+    image: nginx:alpine
+    container_name: goutcare-nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./certbot/conf:/etc/letsencrypt:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - uploads_data:/app/uploads:ro   # Nginx 直接提供上传文件的静态服务
+    depends_on:
+      - backend
+
+  # ==================== SSL 证书自动续签 ====================
+  certbot:
+    image: certbot/certbot
+    container_name: goutcare-certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  mongo_data:
+  uploads_data:

@@ -1,0 +1,112 @@
+<wxs module="utils">
+  function formatTime(timestamp) {
+    if (!timestamp) return '';
+    var date = getDate(timestamp);
+    var h = date.getHours();
+    var m = date.getMinutes();
+    return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+  }
+  module.exports = {
+    formatTime: formatTime
+  };
+</wxs>
+
+<view class="chat-page {{showMore ? 'show-panel' : ''}}">
+  <scroll-view class="message-list" scroll-y="true" scroll-into-view="{{toView}}" enable-flex="true">
+    <block wx:for="{{messages}}" wx:key="_id">
+      <view id="msg-{{item._id}}" class="message-item {{item.fromOpenid === currentUser.openid ? 'self' : ''}}" wx:if="{{item.content || item.msgType === 'image'}}">
+        <view class="time-badge" wx:if="{{index === 0 || (item.createdAt - messages[index-1].createdAt > 300000)}}">
+          {{utils.formatTime(item.createdAt)}}
+        </view>
+        
+        <view class="bubble-row">
+           <!-- 头像 (通过 CSS row-reverse 控制左右位置) -->
+           <view class="avatar" wx:if="{{item.fromOpenid !== currentUser.openid}}">
+             {{(doctor && doctor.openid === item.fromOpenid) ? (doctor.nickName[0] || '医') : (patient && patient.openid === item.fromOpenid ? (patient.nickName[0] || '患') : '?')}}
+           </view>
+           <view class="avatar" wx:else>
+             {{currentUser.nickName[0] || '我'}}
+           </view>
+
+           <!-- 气泡区域 -->
+              <view class="bubble-content">
+              <view class="bubble {{item.msgType === 'image' ? 'image-bubble' : ''}}">
+                <block wx:if="{{item.msgType === 'image'}}">
+                  <view class="image-wrapper">
+                    <image 
+                      class="msg-image {{item.status === 'uploading' ? 'uploading' : ''}}" 
+                      src="{{item.thumbnailUrl || item.tempUrl || item.content}}" 
+                      mode="aspectFill" 
+                      lazy-load="{{true}}"
+                      bindtap="previewImage" 
+                      bindlongpress="longPressImage"
+                      data-src="{{item.tempUrl || item.content}}" 
+                      data-msgid="{{item._id}}"
+                    />
+                    <view class="upload-progress" wx:if="{{item.status === 'uploading'}}">
+                      <view class="progress-bar">
+                        <view class="progress-fill" style="width: {{item.uploadProgress || 0}}%"></view>
+                      </view>
+                      <text class="progress-text">{{item.uploadProgress || 0}}%</text>
+                    </view>
+                  </view>
+                </block>
+                <block wx:else>
+                  <text class="text" user-select="{{true}}">{{item.content}}</text>
+                </block>
+              </view>
+
+              <!-- 发送状态与已读状态 (仅我发送的消息显示) -->
+              <view class="status-row" wx:if="{{item.fromOpenid === currentUser.openid}}">
+                <!-- 发送失败/发送中 -->
+                <block wx:if="{{item.status && item.status !== 'success'}}">
+                   <text class="status-text {{item.status === 'fail' ? 'status-fail' : 'status-pending'}}" data-id="{{item.clientMsgId || item._id}}" bindtap="handleRetry">
+                     {{item.status === 'fail' ? '!' : '...'}}
+                   </text>
+                </block>
+                <!-- 已读/未读 (仅成功发送的消息显示) -->
+                <block wx:elif="{{item.status === 'success' || !item.status}}">
+                   <text class="read-status {{item.read ? 'read' : 'unread'}}">{{item.read ? '已读' : '未读'}}</text>
+                </block>
+              </view>
+           </view>
+
+           <!-- 头像已在上方通过 wx:if/else 统一处理，此处移除重复的"我的头像" -->
+        </view>
+      </view>
+    </block>
+    <view id="scroll-bottom" style="height: 20rpx;"></view>
+  </scroll-view>
+
+  <view class="footer-area">
+    <view class="input-bar">
+      <input 
+        class="input" 
+        placeholder="请输入咨询内容" 
+        value="{{content}}" 
+        bindinput="onInput" 
+        confirm-type="send" 
+        bindconfirm="handleSend" 
+        cursor-spacing="20"
+        adjust-position="{{true}}"
+        always-embed="{{true}}"
+      />
+      <view class="action-btn" bindtap="toggleMore" wx:if="{{!content}}">
+        <text class="plus-icon">+</text>
+      </view>
+      <button class="send-btn" type="primary" bindtap="handleSend" wx:if="{{content}}">发送</button>
+    </view>
+    
+    <view class="more-panel" wx:if="{{showMore}}">
+      <view class="panel-item" bindtap="chooseImage">
+        <view class="panel-icon">🖼️</view>
+        <text class="panel-text">照片</text>
+      </view>
+      <!-- Placeholder for more features -->
+      <!-- <view class="panel-item">
+        <view class="panel-icon">📷</view>
+        <text class="panel-text">拍摄</text>
+      </view> -->
+    </view>
+  </view>
+</view>

@@ -1,0 +1,152 @@
+[
+  {
+    "_id": "mock_patient_1",
+    "_openid": "oMockUser_1_abcdefg",
+    "username": "patient1",
+    "password": "123",
+    "nickName": "王大明",
+    "role": "user",
+    "avatar": "",
+    "createdAt": {
+      "$date": 1698768000000
+    },
+    "lastLoginAt": {
+      "$date": 1709424000000
+    }
+  },
+  {
+    "_id": "mock_patient_2",
+    "_openid": "oMockUser_2_bcdefgh",
+    "username": "patient2",
+    "password": "123",
+    "nickName": "李晓红",
+    "role": "user",
+    "avatar": "",
+    "createdAt": {
+      "$date": 1698854400000
+    },
+    "lastLoginAt": {
+      "$date": 1709337600000
+    }
+  },
+  {
+    "_id": "mock_patient_3",
+    "_openid": "oMockUser_3_cdefghi",
+    "username": "patient3",
+    "password": "123",
+    "nickName": "张建国",
+    "role": "user",
+    "avatar": "",
+    "createdAt": {
+      "$date": 1698940800000
+    },
+    "lastLoginAt": {
+      "$date": 1709251200000
+    }
+  },
+  {
+    "_id": "mock_patient_4",
+    "_openid": "oMockUser_4_defghij",
+    "username": "patient4",
+    "password": "123",
+    "nickName": "刘小丽",
+    "role": "user",
+    "avatar": "",
+    "createdAt": {
+      "$date": 1699027200000
+    },
+    "lastLoginAt": {
+      "$date": 1709164800000
+    }
+  },
+  {
+    "_id": "mock_patient_5",
+    "_openid": "oMockUser_5_efghijk",
+    "username": "patient5",
+    "password": "123",
+    "nickName": "陈志强",
+    "role": "user",
+    "avatar": "",
+    "createdAt": {
+      "$date": 1699113600000
+    },
+    "lastLoginAt": {
+      "$date": 1709078400000
+    }
+  },
+  {
+    "_id": "mock_patient_6",
+    "_openid": "oMockUser_6_fghijkl",
+    "username": "patient6",
+    "password": "123",
+    "nickName": "杨静",
+    "role": "user",
+    "avatar": "",
+    "createdAt": {
+      "$date": 1699200000000
+    },
+    "lastLoginAt": {
+      "$date": 1708992000000
+    }
+  },
+  {
+    "_id": "mock_patient_7",
+    "_openid": "oMockUser_7_ghijklm",
+    "username": "patient7",
+    "password": "123",
+    "nickName": "赵伟",
+    "role": "user",
+    "avatar": "",
+    "createdAt": {
+      "$date": 1699286400000
+    },
+    "lastLoginAt": {
+      "$date": 1708905600000
+    }
+  },
+  {
+    "_id": "mock_patient_8",
+    "_openid": "oMockUser_8_hijklmn",
+    "username": "patient8",
+    "password": "123",
+    "nickName": "周梦琪",
+    "role": "user",
+    "avatar": "",
+    "createdAt": {
+      "$date": 1699372800000
+    },
+    "lastLoginAt": {
+      "$date": 1708819200000
+    }
+  },
+  {
+    "_id": "mock_patient_9",
+    "_openid": "oMockUser_9_ijklmno",
+    "username": "patient9",
+    "password": "123",
+    "nickName": "吴海涛",
+    "role": "user",
+    "avatar": "",
+    "createdAt": {
+      "$date": 1699459200000
+    },
+    "lastLoginAt": {
+      "$date": 1708732800000
+    }
+  },
+  {
+    "_id": "mock_patient_10",
+    "_openid": "oMockUser_10_jklmnop",
+    "username": "patient10",
+    "password": "123",
+    "nickName": "孙雨萱",
+    "role": "user",
+    "avatar": "",
+    "createdAt": {
+      "$date": 1699545600000
+    },
+    "lastLoginAt": {
+      "$date": 1708646400000
+    }
+  }
+]

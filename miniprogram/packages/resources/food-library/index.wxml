@@ -1,0 +1,175 @@
+<wxs module="utils">
+var getPurineColor = function(level) {
+  var map = {
+    'low': '#10B981',
+    'medium': '#F59E0B',
+    'high': '#EF4444'
+  };
+  return map[level] || map['low'];
+};
+
+var getPurineLabel = function(level) {
+  var map = {
+    'low': '低嘌呤',
+    'medium': '中嘌呤',
+    'high': '高嘌呤'
+  };
+  return map[level] || map['low'];
+};
+
+module.exports = {
+  getPurineColor: getPurineColor,
+  getPurineLabel: getPurineLabel
+};
+</wxs>
+
+<view class="diet-page">
+  <!-- 顶部标题栏 -->
+  <view class="header">
+    <view class="back-btn" bindtap="goBack">
+      <text class="back-icon">←</text>
+    </view>
+    <text class="header-title">饮食记录</text>
+    <view class="header-placeholder"></view>
+  </view>
+
+  <!-- 日期选择 -->
+  <view class="date-section">
+    <picker mode="date" value="{{selectedDate}}" bindchange="onDateChange">
+      <view class="date-picker">
+        <text class="date-icon">📅</text>
+        <text class="date-text">{{selectedDate || '选择日期'}}</text>
+        <text class="date-arrow">▼</text>
+      </view>
+    </picker>
+  </view>
+
+  <!-- 分类筛选 -->
+  <view class="category-section">
+    <scroll-view class="category-scroll" scroll-x>
+      <view class="category-list">
+        <block wx:for="{{categories}}" wx:key="*this">
+          <view 
+            class="category-item {{activeCategory === item ? 'active' : ''}}"
+            data-category="{{item}}"
+            bindtap="onCategoryTap"
+          >
+            {{item}}
+          </view>
+        </block>
+      </view>
+    </scroll-view>
+  </view>
+
+  <!-- 食物列表 -->
+  <view class="food-list-section">
+    <block wx:if="{{filteredFoods.length > 0}}">
+      <view 
+        class="food-item"
+        wx:for="{{filteredFoods}}"
+        wx:key="_id"
+      >
+        <view class="food-info">
+          <view class="food-name">{{item.name}}</view>
+          <view class="food-meta">
+            <text class="food-category">{{item.category}}</text>
+            <text class="food-sep">·</text>
+            <text class="food-purine" style="color: {{utils.getPurineColor(item.purineLevel)}}">
+              {{utils.getPurineLabel(item.purineLevel)}}
+            </text>
+          </view>
+        </view>
+        <view class="food-action">
+          <text class="delete-btn" bindtap="onDeleteFood" data-id="{{item._id}}">删除</text>
+        </view>
+      </view>
+    </block>
+    <view wx:else class="empty-state">
+      <text>暂无记录</text>
+      <text class="empty-hint">点击右下角按钮添加食物</text>
+    </view>
+  </view>
+
+  <!-- 添加按钮 -->
+  <view class="add-btn" bindtap="onAddFood">
+    <text class="add-icon">+</text>
+  </view>
+
+  <!-- 添加食物弹窗 -->
+  <page-container 
+    show="{{showAddModal}}" 
+    position="bottom" 
+    round
+    custom-style="background-color: #fff;"
+  >
+    <view class="add-modal">
+      <view class="modal-header">
+        <text class="modal-title">添加食物</text>
+        <view class="close-btn" bindtap="onCloseModal">×</view>
+      </view>
+
+      <!-- 选择分类 -->
+      <view class="modal-category-section">
+        <view class="category-title">选择餐次</view>
+        <view class="category-options">
+          <block wx:for="{{categories}}" wx:key="*this" wx:if="{{item !== '全部'}}">
+            <view 
+              class="category-option {{newFoodCategory === item ? 'active' : ''}}"
+              data-category="{{item}}"
+              bindtap="onSelectNewCategory"
+            >
+              {{item}}
+            </view>
+          </block>
+        </view>
+      </view>
+
+      <!-- 搜索框 -->
+      <view class="search-section">
+        <input 
+          class="search-input"
+          placeholder="搜索食物名称"
+          placeholder-class="search-placeholder"
+          value="{{searchKeyword}}"
+          bindinput="onSearchInput"
+        />
+      </view>
+
+      <!-- 搜索结果/食物列表 -->
+      <view class="modal-food-list">
+        <block wx:if="{{searchKeyword && filteredFoods.length > 0}}">
+          <view 
+            class="modal-food-item"
+            wx:for="{{filteredFoods}}"
+            wx:key="name"
+            bindtap="onSelectFood"
+            data-name="{{item.name}}"
+            data-purine-level="{{item.purineLevel}}"
+          >
+            <view class="modal-food-name">{{item.name}}</view>
+            <view class="modal-food-badge" style="background-color: {{utils.getPurineColor(item.purineLevel)}}20; color: {{utils.getPurineColor(item.purineLevel)}};">
+              {{utils.getPurineLabel(item.purineLevel)}}
+            </view>
+          </view>
+        </block>
+        <view wx:elif="{{searchKeyword && filteredFoods.length === 0}}" class="empty-search">
+          <text>未找到相关食物，请选择嘌呤量添加：</text>
+          <view class="custom-food-actions">
+            <view class="custom-btn low" bindtap="onSelectFood" data-name="{{searchKeyword}}" data-purine-level="low">
+              低嘌呤
+            </view>
+            <view class="custom-btn medium" bindtap="onSelectFood" data-name="{{searchKeyword}}" data-purine-level="medium">
+              中嘌呤
+            </view>
+            <view class="custom-btn high" bindtap="onSelectFood" data-name="{{searchKeyword}}" data-purine-level="high">
+              高嘌呤
+            </view>
+          </view>
+        </view>
+        <view wx:else class="empty-search">
+          <text>请输入食物名称搜索</text>
+        </view>
+      </view>
+    </view>
+  </page-container>
+</view>

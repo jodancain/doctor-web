@@ -1,0 +1,1 @@
+<view class="page-padding"><view class="page-title">{{title}}</view><view class="empty-state">功能开发中...</view></view>

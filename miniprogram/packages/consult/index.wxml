@@ -1,0 +1,38 @@
+<wxs module="utils">
+  function getFirstChar(str) {
+    if (!str) return '';
+    return str.substring(0, 1);
+  }
+  module.exports = {
+    getFirstChar: getFirstChar
+  };
+</wxs>
+
+<view class="consult-page">
+  <view class="hero">
+    <view class="title">咨询医生</view>
+    <view class="subtitle">选择合适的医生进行 1v1 咨询，在线图文沟通</view>
+  </view>
+
+  <view class="doctor-list" wx:if="{{doctors.length}}">
+    <block wx:for="{{doctors}}" wx:key="_id">
+      <!-- 注意：这里 data-openid 取的是 item._openid，云开发数据库标准字段 -->
+      <view class="doctor-card" bindtap="startChat" data-openid="{{item._openid}}" data-name="{{item.nickName || item.username}}">
+        <view class="avatar">{{utils.getFirstChar(item.nickName || item.username)}}</view>
+        <view class="info">
+          <view class="name-row">
+            <text class="name">{{item.nickName || item.username}}</text>
+            <text class="tag">医生</text>
+          </view>
+          <view class="desc">{{item.title || '医生'}} · {{item.hospital || '在线问诊'}}</view>
+        </view>
+        <view class="ghost">开始</view>
+      </view>
+    </block>
+  </view>
+
+  <view class="empty" wx:if="{{!doctors.length && !loading}}">
+    <text class="empty-title">暂无医生在线</text>
+    <text class="empty-desc">请稍后再来查看</text>
+  </view>
+</view>

@@ -1,0 +1,65 @@
+<view class="folder-page">
+  <!-- 1. 健康画像卡片 -->
+  <view class="profile-card">
+    <view class="profile-header">
+      <view class="avatar-box">
+        <view class="avatar">{{profile.name ? profile.name[0] : '患'}}</view>
+        <view class="gender-badge {{profile.gender === 'female' ? 'female' : 'male'}}">
+          {{profile.gender === 'female' ? '♀' : '♂'}}
+        </view>
+      </view>
+      <view class="profile-info">
+        <view class="name-row">
+          <text class="name">{{profile.name || '未填写'}}</text>
+          <view class="risk-tag">{{computed.riskLevel}}</view>
+        </view>
+        <view class="meta-row">
+          <text>{{computed.age}}岁</text>
+          <text class="divider">|</text>
+          <text>确诊{{computed.duration}}</text>
+        </view>
+      </view>
+      <view class="edit-icon" data-section="basic" bindtap="goToDetail">✎</view>
+    </view>
+
+    <!-- 关键指标 -->
+    <view class="stats-grid">
+      <view class="stat-item">
+        <text class="stat-label">目标尿酸</text>
+        <view class="stat-value-row">
+          <text class="stat-value">360</text>
+          <text class="stat-unit">umol/L</text>
+        </view>
+      </view>
+      <view class="stat-divider"></view>
+      <view class="stat-item">
+        <text class="stat-label">BMI指数</text>
+        <view class="stat-value-row">
+          <text class="stat-value">{{computed.bmi}}</text>
+          <text class="stat-unit">{{computed.bmiStatus}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 2. 模块分组宫格 -->
+  <view class="modules-container">
+    <block wx:for="{{modules}}" wx:key="title">
+      <view class="section-title">{{item.title}}</view>
+      <view class="module-grid">
+        <block wx:for="{{item.items}}" wx:key="id" wx:for-item="module">
+          <view class="module-card" data-section="{{module.id}}" bindtap="goToDetail">
+            <view class="module-icon" style="background-color: {{module.color}}">
+              {{module.icon}}
+            </view>
+            <text class="module-name">{{module.name}}</text>
+            <view class="arrow">></view>
+          </view>
+        </block>
+      </view>
+    </block>
+  </view>
+  
+  <view class="footer-tip">完善档案有助于医生更精准地评估您的病情</view>
+</view>
+

@@ -1,0 +1,54 @@
+<view class="chat-page">
+  <scroll-view 
+    class="chat-list" 
+    scroll-y="true" 
+    scroll-into-view="{{toView}}"
+    scroll-with-animation="true"
+    enhanced="true"
+    show-scrollbar="false"
+  >
+    <!-- Placeholder to prevent first message from sticking to top -->
+    <view class="padding-top"></view>
+
+    <block wx:for="{{messages}}" wx:key="_id">
+      <!-- AI Message -->
+      <view class="msg-item {{item.fromType === 'ai' ? 'left' : 'right'}}" id="{{item._id}}">
+        <view class="avatar {{item.fromType === 'ai' ? 'ai-avatar' : 'user-avatar'}}">
+          {{item.fromType === 'ai' ? '🤖' : '我'}}
+        </view>
+        <view class="msg-content">
+          <text class="msg-text" user-select="true" space="nbsp" decode="true">{{item.content}}</text>
+        </view>
+      </view>
+    </block>
+
+    <!-- Loading Indicator -->
+    <view class="msg-item left" wx:if="{{loading}}">
+      <view class="avatar ai-avatar">🤖</view>
+      <view class="msg-content typing">
+        <text class="typing-dot">.</text>
+        <text class="typing-dot">.</text>
+        <text class="typing-dot">.</text>
+      </view>
+    </view>
+
+    <!-- Bottom scroll anchor -->
+    <view id="scroll-bottom" class="scroll-bottom" style="height: calc({{keyboardHeight}}px + {{keyboardHeight > 0 ? '120rpx' : 'calc(120rpx + env(safe-area-inset-bottom))'}});"></view>
+  </scroll-view>
+
+  <view class="input-bar" style="bottom: {{keyboardHeight}}px; padding-bottom: {{keyboardHeight > 0 ? '20rpx' : 'calc(20rpx + env(safe-area-inset-bottom))'}};">
+    <input 
+      class="msg-input" 
+      value="{{content}}"
+      bindinput="onInput"
+      bindfocus="onFocus"
+      bindblur="onBlur"
+      placeholder="请输入您的问题..."
+      cursor-spacing="20"
+      adjust-position="{{false}}"
+      confirm-type="send"
+      bindconfirm="handleSend"
+    />
+    <button class="send-btn {{content.trim() ? 'active' : ''}}" bindtap="handleSend">发送</button>
+  </view>
+</view>

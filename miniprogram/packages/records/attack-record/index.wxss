@@ -1,0 +1,417 @@
+/* 页面容器 */
+.page-container {
+  padding: 32rpx;
+  background-color: #F6F8FA;
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding-bottom: 30rpx; /* 留出底部按钮空间 */
+}
+
+.section-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 32rpx;
+  text-align: center;
+}
+
+/* 卡片通用样式 */
+.card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.02);
+}
+
+.card-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1F2937;
+  margin-bottom: 24rpx;
+}
+
+/* 标签网格 */
+.tag-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20rpx;
+}
+
+.tag {
+  padding: 16rpx 32rpx;
+  background: #F3F4F6;
+  border-radius: 12rpx;
+  font-size: 28rpx;
+  color: #4B5563;
+  transition: all 0.2s;
+}
+
+.tag.outline {
+  background: #fff;
+  border: 1rpx solid #E5E7EB;
+}
+
+.tag.active {
+  background: #EFF6FF;
+  color: #2563EB;
+  font-weight: 500;
+  border-color: #BFDBFE; /* for outline tags */
+}
+
+/* 疼痛滑块 */
+.pain-slider-container {
+  padding: 0 10rpx;
+}
+
+.emoji-face {
+  text-align: center;
+  margin-bottom: 20rpx;
+  height: 80rpx;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.emoji-img {
+  width: 80rpx;
+  height: 80rpx;
+}
+
+.score-display {
+  text-align: right;
+  margin-bottom: 10rpx;
+}
+
+.score-display .score {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #059669; /* 动态变色在 JS 控制 */
+}
+
+.score-display .max-score {
+  font-size: 24rpx;
+  color: #9CA3AF;
+}
+
+.slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 24rpx;
+  color: #9CA3AF;
+  margin-top: 10rpx;
+}
+
+/* 底部按钮 */
+
+.footer {
+  /* position: fixed;  删除这几行 */
+  /* bottom: 0; */
+  /* left: 0; */
+  /* right: 0; */
+  
+  /* 如果您想让它看起来像上面的卡片一样，可以加圆角和上边距 */
+  margin-top: 32rpx;   /* 距离上面的卡片远一点 */
+  padding: 32rpx 0;    /* 调整内部间距 */
+  background: transparent; /* 把背景变成透明，或者改成 #FFFFFF 并加 border-radius 变成卡片 */
+  box-shadow: none;    /* 取消阴影 */
+}
+
+.submit-btn {
+  background: #EF4444; /* 红色警示感，符合发作记录 */
+  color: white;
+  border-radius: 48rpx;
+  font-size: 32rpx;
+  font-weight: 500;
+  height: 90rpx;
+  line-height: 60rpx;
+  border: none;
+}
+
+.submit-btn:active {
+  opacity: 0.9;
+}
+
+/* Tab切换 */
+.tab-bar {
+  display: flex;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 8rpx;
+  margin-bottom: 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.02);
+}
+
+.tab-item {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx 0;
+  font-size: 28rpx;
+  color: #6B7280;
+  border-radius: 16rpx;
+  transition: all 0.3s;
+}
+
+.tab-item.active {
+  background: #111827;
+  color: #FFFFFF;
+  font-weight: 600;
+}
+
+.tab-content {
+  will-change: opacity, transform;
+  animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10rpx);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 统计页面样式 */
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24rpx;
+  margin-bottom: 32rpx;
+}
+
+.summary-card {
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  box-shadow: 0 2rpx 12rpx rgba(0, 0, 0, 0.02);
+  position: relative;
+  overflow: hidden;
+}
+
+.summary-icon {
+  position: absolute;
+  top: 32rpx;
+  right: 32rpx;
+  font-size: 48rpx;
+  opacity: 0.3;
+}
+
+.summary-value {
+  font-size: 48rpx;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 8rpx;
+}
+
+.summary-label {
+  font-size: 24rpx;
+  color: #6B7280;
+}
+
+.summary-desc {
+  font-size: 22rpx;
+  color: #9CA3AF;
+  margin-top: 4rpx;
+}
+
+/* 饼状图 */
+.pie-chart {
+  width: 100%;
+  height: 500rpx;
+  margin: 32rpx 0;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24rpx;
+  justify-content: center;
+  margin-top: 20rpx;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.legend-color {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 50%;
+}
+
+.legend-text {
+  font-size: 26rpx;
+  color: #4B5563;
+}
+
+/* 高频发作部位 */
+.joint-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.joint-item {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+}
+
+.joint-rank {
+  width: 48rpx;
+  height: 48rpx;
+  background: #EF4444;
+  color: #FFFFFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24rpx;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.joint-name {
+  font-size: 28rpx;
+  color: #111827;
+  min-width: 180rpx;
+  flex-shrink: 0;
+}
+
+.joint-bar-wrapper {
+  flex: 1;
+  height: 24rpx;
+  background: #F3F4F6;
+  border-radius: 12rpx;
+  overflow: hidden;
+}
+
+.joint-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #EF4444, #F59E0B);
+  border-radius: 12rpx;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: width;
+}
+
+.joint-count {
+  font-size: 24rpx;
+  color: #6B7280;
+  min-width: 60rpx;
+  text-align: right;
+}
+
+/* 发作历史 */
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24rpx;
+}
+
+.history-item {
+  background: #F9FAFB;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  border-left: 4rpx solid #EF4444;
+}
+
+.history-date {
+  font-size: 24rpx;
+  color: #6B7280;
+  margin-bottom: 12rpx;
+}
+
+.history-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12rpx;
+}
+
+.history-joint {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #111827;
+}
+
+.history-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12rpx;
+}
+
+.pain-tag {
+  padding: 4rpx 12rpx;
+  border-radius: 12rpx;
+  font-size: 22rpx;
+  font-weight: 500;
+}
+
+.pain-tag.high {
+  background: #FEE2E2;
+  color: #DC2626;
+}
+
+.pain-tag.medium {
+  background: #FEF3C7;
+  color: #D97706;
+}
+
+.pain-tag.low {
+  background: #D1FAE5;
+  color: #059669;
+}
+
+.history-triggers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8rpx;
+}
+
+.trigger-tag {
+  padding: 4rpx 12rpx;
+  background: #F3F4F6;
+  color: #6B7280;
+  border-radius: 8rpx;
+  font-size: 22rpx;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 120rpx 0;
+  color: #9CA3AF;
+  font-size: 28rpx;
+}
+
+.empty-chart {
+  text-align: center;
+  padding: 80rpx 0;
+  color: #9CA3AF;
+  font-size: 26rpx;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 120rpx 0;
+  color: #9CA3AF;
+  font-size: 28rpx;
+}
+
+/* 性能优化 */
+.summary-card,
+.joint-item,
+.history-item {
+  will-change: transform;
+  transform: translateZ(0); /* 开启硬件加速 */
+}
+
+/* 优化tab切换性能 */
+.tab-item {
+  will-change: background-color, color;
+  transform: translateZ(0);
+}

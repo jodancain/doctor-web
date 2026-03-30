@@ -1,0 +1,89 @@
+<wxs module="utils">
+  function getFirstChar(str) {
+    if (!str) return '';
+    return str.substring(0, 1);
+  }
+  module.exports = {
+    getFirstChar: getFirstChar
+  };
+</wxs>
+
+<view class="home-page">
+  <!-- 顶部用户信息及尿酸概览卡片 -->
+  <view class="hero-card">
+    <view class="user-header">
+      <!-- 头像 -->
+      <view class="avatar">
+        <text>{{utils.getFirstChar(user.nickName || user.username || '未登录')}}</text>
+      </view>
+      
+      <!-- 名字和风险等级 -->
+      <view class="user-info">
+        <view class="name-row">
+          <text class="user-name">{{(user && (user.nickName || user.username)) || '未登录'}}</text>
+          <!-- 风险等级标签 -->
+          <text class="risk-tag {{riskLevel === '需关注' ? 'warning' : 'safe'}}">{{riskLevel || '低风险'}}</text>
+        </view>
+        <!-- 最新尿酸值 -->
+        <view class="ua-info">
+          <text class="ua-label">最新尿酸值：</text>
+          <text class="ua-value">{{latestUa !== '--' ? latestUa + ' μmol/L' : '暂无记录'}}</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 核心功能快捷入口 (8宫格) -->
+  <view class="feature-card">
+    <view class="feature-grid">
+      <block wx:for="{{featureList}}" wx:key="title">
+        <view class="feature-item" bindtap="handleFeatureTap" data-path="{{item.path}}">
+          <view class="feature-icon" style="background: {{item.bg}}">{{item.icon}}</view>
+          <text class="feature-title">{{item.title}}</text>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 患者专属区域 -->
+  <block wx:if="{{user.role !== 'doctor'}}">
+    <!-- 今日待办/任务列表 -->
+    <view class="card todo-card" wx:if="{{todoList && todoList.length > 0}}">
+      <view class="section-header">
+        <text class="section-title">今日待办</text>
+        <text class="section-subtitle">坚持就是胜利</text>
+      </view>
+      <view class="todo-list">
+        <block wx:for="{{todoList}}" wx:key="title">
+          <view class="todo-item" bindtap="handleFeatureTap" data-path="{{item.path}}">
+            <view class="todo-icon">{{item.icon}}</view>
+            <view class="todo-content">
+              <view class="todo-title">{{item.title}}</view>
+              <view class="todo-desc">{{item.desc}}</view>
+            </view>
+            <view class="todo-action">
+              <button class="primary-btn mini-btn" size="mini">{{item.action}}</button>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 痛风科普资讯 -->
+    <view class="card news-card" wx:if="{{newsList && newsList.length > 0}}">
+      <view class="section-header">
+        <text class="section-title">痛风科普</text>
+      </view>
+      <swiper class="news-swiper" autoplay circular interval="3000">
+        <block wx:for="{{newsList}}" wx:key="title">
+          <swiper-item>
+            <view class="news-item">
+              <view class="news-title">{{item.title}}</view>
+              <view class="news-desc">{{item.desc}}</view>
+            </view>
+          </swiper-item>
+        </block>
+      </swiper>
+    </view>
+  </block>
+</view>

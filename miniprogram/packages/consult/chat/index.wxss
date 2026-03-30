@@ -1,0 +1,294 @@
+@import "../../../app.wxss";
+
+page {
+  background-color: #F3F4F6;
+}
+
+.chat-page {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.message-list {
+  flex: 1;
+  padding: 24rpx 24rpx 0;
+  box-sizing: border-box;
+  overflow-y: auto;
+}
+
+.message-item {
+  margin-bottom: 40rpx;
+  display: flex;
+  flex-direction: column;
+}
+
+.time-badge {
+  align-self: center;
+  background-color: #e9e9e9;
+  color: #999;
+  font-size: 24rpx;
+  padding: 4rpx 16rpx;
+  border-radius: 8rpx;
+  margin-bottom: 24rpx;
+}
+
+.bubble-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 20rpx;
+  padding: 0 20rpx; /* 增加左右内边距 */
+}
+
+.message-item.self .bubble-row {
+  flex-direction: row-reverse;
+}
+
+.avatar {
+  width: 80rpx; /* 稍微调小头像 */
+  height: 80rpx;
+  border-radius: 10rpx;
+  background: #f2f2f2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 30rpx;
+  color: #666;
+  flex-shrink: 0;
+  overflow: hidden;
+  /* 移除 margin，使用 gap 控制间距 */
+}
+
+.message-item.self .avatar {
+  /* background: var(--color-primary-light); */
+  /* color: #FFFFFF; */
+  background: #ededed;
+  color: #333;
+}
+
+.bubble-content {
+  max-width: 72%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.message-item.self .bubble-content {
+  align-items: flex-end;
+}
+
+.bubble {
+  background: #FFFFFF;
+  padding: 22rpx 26rpx;
+  border-radius: 12rpx;
+  position: relative;
+  /* box-shadow: 0 2rpx 4rpx rgba(0,0,0,0.05); */
+  min-height: 40rpx;
+  min-width: 40rpx;
+  font-size: 32rpx;
+  color: #191919;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+/* WeChat Green for Self */
+.message-item.self .bubble {
+  background: #95EC69; 
+  /* background: var(--color-primary, #4F46E5); */
+  color: #191919;
+}
+
+/* Image bubble adjustment */
+.image-bubble {
+  padding: 0 !important;
+  background: transparent !important; /* Override colors */
+  box-shadow: none !important;
+  overflow: hidden;
+  margin: 0;
+  border: none;
+  min-height: 0;
+  min-width: 0;
+}
+
+.image-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.msg-image {
+  max-width: 360rpx;
+  max-height: 400rpx;
+  min-width: 200rpx;
+  min-height: 200rpx;
+  border-radius: 12rpx;
+  display: block;
+  background-color: #f0f0f0;
+  vertical-align: bottom;
+}
+
+.msg-image.uploading {
+  opacity: 0.6;
+}
+
+.upload-progress {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  text-align: center;
+  z-index: 10;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 6rpx;
+  background-color: rgba(255, 255, 255, 0.3);
+  border-radius: 3rpx;
+  overflow: hidden;
+  margin-bottom: 12rpx;
+}
+
+.progress-fill {
+  height: 100%;
+  background-color: #07C160;
+  border-radius: 3rpx;
+  transition: width 0.3s;
+}
+
+.progress-text {
+  color: #FFFFFF;
+  font-size: 24rpx;
+  font-weight: 600;
+  text-shadow: 0 1rpx 2rpx rgba(0, 0, 0, 0.3);
+}
+
+.status-row {
+  margin-top: 8rpx;
+  padding: 0 4rpx;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-height: 30rpx;
+}
+
+.status-text {
+  font-size: 24rpx;
+}
+
+.status-fail {
+  color: #fa5151; /* WeChat red */
+  background: #fff;
+  border-radius: 50%;
+  width: 32rpx;
+  height: 32rpx;
+  text-align: center;
+  line-height: 32rpx;
+}
+
+.status-pending {
+  color: #b2b2b2;
+}
+
+.read-status {
+  font-size: 22rpx;
+  margin-right: 0;
+}
+
+.read-status.read {
+  color: #b2b2b2;
+}
+
+.read-status.unread {
+  color: var(--color-primary, #4F46E5);
+  font-weight: 500;
+}
+
+
+/* Footer */
+.footer-area {
+  background: #F7F7F7;
+  border-top: 1rpx solid #E5E5E5;
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.input-bar {
+  display: flex;
+  align-items: center;
+  padding: 16rpx 24rpx;
+  gap: 20rpx;
+  min-height: 100rpx;
+  box-sizing: border-box;
+}
+
+.input {
+  flex: 1;
+  background: #FFFFFF;
+  border-radius: 12rpx;
+  padding: 16rpx 20rpx;
+  font-size: 30rpx;
+  min-height: 72rpx;
+}
+
+.action-btn {
+  width: 60rpx;
+  height: 60rpx;
+  border-radius: 50%;
+  border: 2rpx solid #999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 10rpx;
+}
+
+.plus-icon {
+  font-size: 40rpx;
+  color: #999;
+  line-height: 50rpx;
+  font-weight: 300;
+}
+
+.send-btn {
+  margin: 0 !important;
+  padding: 0 24rpx !important;
+  height: 64rpx !important;
+  line-height: 64rpx !important;
+  font-size: 28rpx !important;
+  border-radius: 12rpx !important;
+  background: var(--color-primary) !important;
+}
+
+/* More Panel */
+.more-panel {
+  height: 200rpx;
+  background: #F7F7F7;
+  display: flex;
+  align-items: center;
+  padding: 0 40rpx;
+  border-top: 1rpx solid #E5E5E5;
+}
+
+.panel-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12rpx;
+}
+
+.panel-icon {
+  width: 100rpx;
+  height: 100rpx;
+  background: #FFFFFF;
+  border-radius: 24rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48rpx;
+  color: #666;
+}
+
+.panel-text {
+  font-size: 24rpx;
+  color: #888;
+}
