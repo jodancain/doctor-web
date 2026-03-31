@@ -43,6 +43,45 @@ router.get('/', async (req: AuthRequest, res: Response) => {
   }
 });
 
+// GET /api/questionnaires/records/list — must be before /:id to avoid route conflict
+router.get('/records/list', async (req: AuthRequest, res: Response) => {
+  try {
+    const limit = parseInt(req.query.limit as string) || 20;
+    const offset = parseInt(req.query.offset as string) || 0;
+    const q = req.query.q as string;
+
+    let query: any = {};
+    if (q) {
+      const searchRegex = db.RegExp({ regexp: q, options: 'i' });
+      query = _.or([
+        { questionnaireName: searchRegex },
+        { patientName: searchRegex },
+        { patientId: searchRegex },
+      ]);
+    }
+
+    const [countResult, dataResult] = await Promise.all([
+      db.collection('questionnaire_records').where(query).count(),
+      db.collection('questionnaire_records')
+        .where(query)
+        .skip(offset)
+        .limit(limit)
+        .orderBy('submitDate', 'desc')
+        .get()
+    ]);
+
+    const items = dataResult.data.map((item: any) => ({
+      ...item,
+      id: item._id,
+    }));
+
+    res.json({ items, total: countResult.total, limit, offset });
+  } catch (error) {
+    logger.error({ error }, 'Error fetching questionnaire records');
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // GET /api/questionnaires/:id
 router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
@@ -180,45 +219,6 @@ router.post('/:id/distribute', async (req: AuthRequest, res: Response) => {
     res.json({ success: true, distributed: patientIds.length });
   } catch (error) {
     logger.error({ error }, 'Error distributing questionnaire');
-    res.status(500).json({ error: 'Internal server error' });
-  }
-});
-
-// GET /api/questionnaires/records/list — get questionnaire submission records
-router.get('/records/list', async (req: AuthRequest, res: Response) => {
-  try {
-    const limit = parseInt(req.query.limit as string) || 20;
-    const offset = parseInt(req.query.offset as string) || 0;
-    const q = req.query.q as string;
-
-    let query: any = {};
-    if (q) {
-      const searchRegex = db.RegExp({ regexp: q, options: 'i' });
-      query = _.or([
-        { questionnaireName: searchRegex },
-        { patientName: searchRegex },
-        { patientId: searchRegex },
-      ]);
-    }
-
-    const [countResult, dataResult] = await Promise.all([
-      db.collection('questionnaire_records').where(query).count(),
-      db.collection('questionnaire_records')
-        .where(query)
-        .skip(offset)
-        .limit(limit)
-        .orderBy('submitDate', 'desc')
-        .get()
-    ]);
-
-    const items = dataResult.data.map((item: any) => ({
-      ...item,
-      id: item._id,
-    }));
-
-    res.json({ items, total: countResult.total, limit, offset });
-  } catch (error) {
-    logger.error({ error }, 'Error fetching questionnaire records');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
