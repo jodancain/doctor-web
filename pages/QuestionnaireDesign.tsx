@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Copy, Trash2, FileText, CheckCircle2, Clock, X, ArrowLeft, GripVertical, Share2, Download, Send, Link as LinkIcon, QrCode } from 'lucide-react';
+import { Plus, Search, Edit2, Copy, Trash2, FileText, CheckCircle2, Clock, X, ArrowLeft, GripVertical, Share2, Download, Send, QrCode } from 'lucide-react';
 import { MOCK_QUESTIONNAIRES } from '../constants';
 import { Questionnaire, Question, Patient } from '../types';
 import { api } from '../api';
@@ -18,6 +18,13 @@ const QuestionnaireDesign: React.FC = () => {
   const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>([]);
   const [distributeTab, setDistributeTab] = useState<'targeted' | 'general'>('targeted');
   const [isSending, setIsSending] = useState(false);
+  const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [questionnaireToDelete, setQuestionnaireToDelete] = useState<string | null>(null);
+
+  const showFeedback = (type: 'error' | 'success', text: string) => {
+    setFeedbackMsg({ type, text });
+    setTimeout(() => setFeedbackMsg(null), 4000);
+  };
 
   const filteredQuestionnaires = questionnaires.filter(q => 
     q.title.toLowerCase().includes(searchTerm.toLowerCase())
@@ -45,7 +52,7 @@ const QuestionnaireDesign: React.FC = () => {
   const handleSaveQuestionnaire = () => {
     if (!editingData) return;
     if (!editingData.title.trim()) {
-      alert('请输入问卷标题');
+      showFeedback('error', '请输入问卷标题');
       return;
     }
 
@@ -67,9 +74,13 @@ const QuestionnaireDesign: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('确定要删除这个问卷吗？')) {
-      setQuestionnaires(questionnaires.filter(q => q.id !== id));
-    }
+    setQuestionnaireToDelete(id);
+  };
+
+  const confirmDeleteQuestionnaire = () => {
+    if (!questionnaireToDelete) return;
+    setQuestionnaires(questionnaires.filter(q => q.id !== questionnaireToDelete));
+    setQuestionnaireToDelete(null);
   };
 
   const handleCopy = (questionnaire: Questionnaire) => {
@@ -103,11 +114,11 @@ const QuestionnaireDesign: React.FC = () => {
     try {
       // Mocking the API call for sending tasks
       await new Promise(resolve => setTimeout(resolve, 800));
-      alert(`已成功向 ${selectedPatientIds.length} 位患者定向下发问卷！患者将在微信收到订阅消息通知。`);
       setDistributeModal({ isOpen: false, questionnaire: null });
+      showFeedback('success', `已成功向 ${selectedPatientIds.length} 位患者下发问卷`);
     } catch (err) {
       console.error(err);
-      alert('下发失败，请重试');
+      showFeedback('error', '下发失败，请重试');
     } finally {
       setIsSending(false);
     }
@@ -164,6 +175,13 @@ const QuestionnaireDesign: React.FC = () => {
   if (viewMode === 'edit' && editingData) {
     return (
       <div className="space-y-6">
+        {feedbackMsg && (
+          <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${
+            feedbackMsg.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+          }`}>
+            {feedbackMsg.text}
+          </div>
+        )}
         {/* Editor Top Bar */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-4 flex-1">
@@ -350,6 +368,13 @@ const QuestionnaireDesign: React.FC = () => {
   // --- List View ---
   return (
     <div className="space-y-6">
+      {feedbackMsg && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${
+          feedbackMsg.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+        }`}>
+          {feedbackMsg.text}
+        </div>
+      )}
       {/* Top Toolbar */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-4 w-full md:w-auto">
@@ -453,7 +478,7 @@ const QuestionnaireDesign: React.FC = () => {
                      <button 
                        className="text-slate-500 hover:text-blue-600 text-xs font-medium flex items-center transition-colors"
                        title="导出为PDF/Word文档"
-                       onClick={() => alert('此功能将导出空白问卷文档供打印')}
+                       onClick={() => showFeedback('success', '导出功能开发中，敬请期待')}
                      >
                        <Download size={14} className="mr-1" /> 导出
                      </button>
@@ -593,8 +618,14 @@ const QuestionnaireDesign: React.FC = () => {
                       <code className="flex-1 bg-slate-50 px-3 py-2 rounded text-sm text-slate-700 select-all">
                         pages/questionnaire/detail?id={distributeModal.questionnaire.id}
                       </code>
-                      <button 
-                        onClick={() => alert('路径已复制到剪贴板')}
+                      <button
+                        onClick={() => {
+                          const path = `pages/questionnaire/detail?id=${distributeModal.questionnaire?.id}`;
+                          navigator.clipboard.writeText(path).then(
+                            () => showFeedback('success', '路径已复制到剪贴板'),
+                            () => showFeedback('error', '复制失败，请手动选中复制')
+                          );
+                        }}
                         className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                         title="复制路径"
                       >
@@ -604,6 +635,30 @@ const QuestionnaireDesign: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {questionnaireToDelete && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">确认删除</h3>
+            <p className="text-slate-600 mb-6">确定要删除这个问卷吗？此操作不可恢复。</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setQuestionnaireToDelete(null)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+              >
+                取消
+              </button>
+              <button
+                onClick={confirmDeleteQuestionnaire}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                确认删除
+              </button>
             </div>
           </div>
         </div>

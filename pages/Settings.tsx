@@ -6,6 +6,12 @@ const Settings: React.FC = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+
+  const showFeedback = (type: 'error' | 'success', text: string) => {
+    setFeedback({ type, text });
+    setTimeout(() => setFeedback(null), 4000);
+  };
 
   const [profile, setProfile] = useState({
     nickName: '',
@@ -41,15 +47,23 @@ const Settings: React.FC = () => {
     try {
       setSaving(true);
       await api.updateProfile(profile);
-      alert('保存成功');
+      showFeedback('success', '保存成功');
       window.dispatchEvent(new Event('profileUpdated'));
     } catch (error) {
       console.error('Failed to save profile:', error);
-      alert('保存失败');
+      showFeedback('error', '保存失败');
     } finally {
       setSaving(false);
     }
   };
+
+  // Password change state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [changingPassword, setChangingPassword] = useState(false);
 
   // Mock form states
   const [notifications, setNotifications] = useState({
@@ -73,6 +87,13 @@ const Settings: React.FC = () => {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      {feedback && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium col-span-full ${
+          feedback.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+        }`}>
+          {feedback.text}
+        </div>
+      )}
       {/* Sidebar */}
       <div className="md:col-span-1 bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden h-fit">
         <div className="p-4 border-b border-slate-100 bg-slate-50/50">
@@ -250,22 +271,50 @@ const Settings: React.FC = () => {
           <div className="space-y-6 animate-fade-in">
              <h2 className="text-xl font-bold text-slate-800 mb-6">账号安全</h2>
 
-             <form className="space-y-4 max-w-md">
+             <form className="space-y-4 max-w-md" onSubmit={async (e) => {
+               e.preventDefault();
+               if (!passwordForm.currentPassword) {
+                 showFeedback('error', '请输入当前密码');
+                 return;
+               }
+               if (passwordForm.newPassword.length < 6) {
+                 showFeedback('error', '新密码至少需要6个字符');
+                 return;
+               }
+               if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+                 showFeedback('error', '两次输入的新密码不一致');
+                 return;
+               }
+               setChangingPassword(true);
+               try {
+                 await api.updateProfile({
+                   currentPassword: passwordForm.currentPassword,
+                   newPassword: passwordForm.newPassword
+                 });
+                 showFeedback('success', '密码更新成功');
+                 setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+               } catch (error) {
+                 console.error('Failed to change password:', error);
+                 showFeedback('error', '密码更新失败，请检查当前密码是否正确');
+               } finally {
+                 setChangingPassword(false);
+               }
+             }}>
                <div>
                  <label className="block text-sm font-medium text-slate-700 mb-2">当前密码</label>
-                 <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+                 <input type="password" placeholder="••••••••" value={passwordForm.currentPassword} onChange={e => setPasswordForm({...passwordForm, currentPassword: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
                </div>
                <div>
                  <label className="block text-sm font-medium text-slate-700 mb-2">新密码</label>
-                 <input type="password" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+                 <input type="password" value={passwordForm.newPassword} onChange={e => setPasswordForm({...passwordForm, newPassword: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
                </div>
                <div>
                  <label className="block text-sm font-medium text-slate-700 mb-2">确认新密码</label>
-                 <input type="password" className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
+                 <input type="password" value={passwordForm.confirmPassword} onChange={e => setPasswordForm({...passwordForm, confirmPassword: e.target.value})} className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-primary-500 outline-none" />
                </div>
-               
-               <button className="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-colors shadow-sm mt-2">
-                 更新密码
+
+               <button type="submit" disabled={changingPassword} className="px-6 py-2.5 bg-slate-800 text-white rounded-xl font-bold hover:bg-slate-900 transition-colors shadow-sm mt-2 disabled:opacity-50">
+                 {changingPassword ? '更新中...' : '更新密码'}
                </button>
              </form>
 

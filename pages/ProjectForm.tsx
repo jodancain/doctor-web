@@ -6,6 +6,13 @@ import { MOCK_PROJECTS } from '../constants';
 
 const ProjectForm: React.FC = () => {
   const navigate = useNavigate();
+  const [feedback, setFeedback] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+
+  const showFeedback = (type: 'error' | 'success', text: string) => {
+    setFeedback({ type, text });
+    setTimeout(() => setFeedback(null), 4000);
+  };
+
   const [formData, setFormData] = useState<Partial<ResearchProject>>({
     name: '',
     periodValue: '',
@@ -17,11 +24,11 @@ const ProjectForm: React.FC = () => {
 
   const handleSave = () => {
     if (!formData.name) {
-      alert('请输入项目名称');
+      showFeedback('error', '请输入项目名称');
       return;
     }
     if (!formData.targetCount || formData.targetCount < 1) {
-      alert('请输入有效的目标人数');
+      showFeedback('error', '请输入有效的目标人数');
       return;
     }
 
@@ -48,6 +55,13 @@ const ProjectForm: React.FC = () => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-100 min-h-[600px] flex flex-col">
+      {feedback && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${
+          feedback.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+        }`}>
+          {feedback.text}
+        </div>
+      )}
       {/* Breadcrumb / Header matching the image style */}
       <div className="px-6 py-4 border-b border-slate-100">
         <div className="flex items-center text-sm text-slate-500">

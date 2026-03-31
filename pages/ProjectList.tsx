@@ -10,6 +10,7 @@ const ProjectList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [projects, setProjects] = useState<ResearchProject[]>([]);
+  const [projectToDelete, setProjectToDelete] = useState<string | null>(null);
 
   useEffect(() => {
     const saved = localStorage.getItem('mock_projects');
@@ -31,11 +32,15 @@ const ProjectList: React.FC = () => {
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('确定要删除该项目吗？')) {
-      const updated = projects.filter(p => p.id !== id);
-      setProjects(updated);
-      localStorage.setItem('mock_projects', JSON.stringify(updated));
-    }
+    setProjectToDelete(id);
+  };
+
+  const confirmDeleteProject = () => {
+    if (!projectToDelete) return;
+    const updated = projects.filter(p => p.id !== projectToDelete);
+    setProjects(updated);
+    localStorage.setItem('mock_projects', JSON.stringify(updated));
+    setProjectToDelete(null);
   };
 
   const filteredProjects = projects.filter(p => {
@@ -205,6 +210,30 @@ const ProjectList: React.FC = () => {
            <button className="px-3 py-1 bg-white border border-slate-200 rounded text-slate-600 text-xs hover:bg-slate-50 disabled:opacity-50" disabled>下一页</button>
          </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {projectToDelete && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">确认删除</h3>
+            <p className="text-slate-600 mb-6">确定要删除该项目吗？此操作不可恢复。</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setProjectToDelete(null)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+              >
+                取消
+              </button>
+              <button
+                onClick={confirmDeleteProject}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

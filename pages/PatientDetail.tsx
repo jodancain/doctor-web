@@ -44,13 +44,14 @@ const PatientDetail: React.FC = () => {
       const currentOffset = reset ? 0 : offset;
       const data = await api.getPatientRecords(id, activeTab, { limit, offset: currentOffset });
       
+      const items = data.items || [];
       if (reset) {
-        setRecords(data.items);
+        setRecords(items);
       } else {
-        setRecords(prev => [...prev, ...data.items]);
+        setRecords(prev => [...prev, ...items]);
       }
-      
-      setHasMore(data.items.length === limit);
+
+      setHasMore(items.length === limit);
       setOffset(currentOffset + limit);
     } catch (error) {
       console.error('Failed to fetch records:', error);
@@ -107,7 +108,7 @@ const PatientDetail: React.FC = () => {
               {patient.nickName || patient.name}
             </h1>
             <p className="text-slate-500 mt-1">
-              {patient.gender === 'Male' ? '男' : patient.gender === 'Female' ? '女' : '未知'} | {patient.age ? `${patient.age}岁` : '--'}
+              {patient.gender === 'Male' ? '男' : patient.gender === 'Female' ? '女' : patient.gender || '未知'} | {patient.age ? `${patient.age}岁` : '--'}
             </p>
           </div>
         </div>
