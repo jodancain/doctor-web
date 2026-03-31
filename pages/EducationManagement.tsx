@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Search, Filter, MoreHorizontal, Download, ChevronDown, Edit, Trash2, Eye, EyeOff, BookOpen, Clock, FileText, Image as ImageIcon, XCircle } from 'lucide-react';
+import { Plus, Search, Edit, Trash2, Eye, EyeOff, BookOpen, Clock, FileText, Image as ImageIcon } from 'lucide-react';
 import { api } from '../api';
 
 interface EducationArticle {
@@ -23,6 +23,9 @@ export default function EducationManagement() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<typeof categories[number]>('全部');
+  const [articleToDelete, setArticleToDelete] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
 
   const fetchArticles = async () => {
     try {
@@ -51,19 +54,20 @@ export default function EducationManagement() {
     }
   };
 
-  const handleSave = async () => {
-    // Moved to ArticleEditor
+  const handleDelete = (id: string) => {
+    setDeleteError(null);
+    setArticleToDelete(id);
   };
 
-  const handleDelete = async (id: string) => {
-    if (window.confirm('确定要删除这篇文章吗？')) {
-      try {
-        await api.deleteEducationArticle(id);
-        fetchArticles();
-      } catch (err) {
-        console.error('Failed to delete article:', err);
-        alert('删除失败，请重试');
-      }
+  const confirmDelete = async () => {
+    if (!articleToDelete) return;
+    try {
+      await api.deleteEducationArticle(articleToDelete);
+      setArticleToDelete(null);
+      fetchArticles();
+    } catch (err) {
+      console.error('Failed to delete article:', err);
+      setDeleteError('删除失败，请重试');
     }
   };
 
@@ -74,12 +78,20 @@ export default function EducationManagement() {
       fetchArticles();
     } catch (err) {
       console.error('Failed to toggle status:', err);
-      alert('状态切换失败，请重试');
+      setFeedbackMsg({ type: 'error', text: '状态切换失败，请重试' });
+      setTimeout(() => setFeedbackMsg(null), 3000);
     }
   };
 
   return (
     <div className="space-y-6">
+      {feedbackMsg && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${
+          feedbackMsg.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+        }`}>
+          {feedbackMsg.text}
+        </div>
+      )}
       {/* Header Description */}
       <div className="bg-gradient-to-r from-primary-50 to-primary-100/50 p-6 rounded-2xl border border-primary-100/50">
         <div className="flex items-start gap-4">
@@ -226,6 +238,33 @@ export default function EducationManagement() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {articleToDelete && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">确认删除</h3>
+            <p className="text-slate-600 mb-4">确定要删除这篇文章吗？此操作不可恢复。</p>
+            {deleteError && (
+              <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg mb-4">{deleteError}</p>
+            )}
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setArticleToDelete(null)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+              >
+                取消
+              </button>
+              <button
+                onClick={confirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                确认删除
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

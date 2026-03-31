@@ -13,6 +13,7 @@ import ProjectForm from './pages/ProjectForm';
 import QuestionnaireDesign from './pages/QuestionnaireDesign';
 import QuestionnaireRecords from './pages/QuestionnaireRecords';
 import ArticleEditor from './pages/ArticleEditor';
+import DoctorChat from './pages/DoctorChat';
 import { 
   UserManagement, 
   RoleManagement, 
@@ -106,6 +107,8 @@ function App() {
                 <Route path="/system/education/new" element={<ArticleEditor />} />
                 <Route path="/system/education/edit/:id" element={<ArticleEditor />} />
 
+                <Route path="/chat" element={<DoctorChat />} />
+                <Route path="/chat/:patientId" element={<DoctorChat />} />
                 <Route path="/ai-consult" element={<AIChat />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<Navigate to="/dashboard" replace />} />

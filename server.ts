@@ -1,4 +1,8 @@
 import 'dotenv/config';
+
+// BigInt JSON serialization support (Prisma returns BigInt for large integer fields)
+(BigInt.prototype as any).toJSON = function () { return Number(this); };
+
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import cookieParser from 'cookie-parser';
@@ -7,6 +11,9 @@ import { logger } from './server/logger';
 import authRoutes from './server/routes/auth';
 import patientRoutes from './server/routes/patients';
 import educationRoutes from './server/routes/education';
+import questionnaireRoutes from './server/routes/questionnaires';
+import messageRoutes from './server/routes/messages';
+import patientApiRoutes from './server/routes/patient-api';
 import path from 'path';
 
 async function startServer() {
@@ -21,6 +28,9 @@ async function startServer() {
   app.use('/api/auth', authRoutes);
   app.use('/api/patients', patientRoutes);
   app.use('/api/education', educationRoutes);
+  app.use('/api/questionnaires', questionnaireRoutes);
+  app.use('/api/messages', messageRoutes);
+  app.use('/api/patient', patientApiRoutes);
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {

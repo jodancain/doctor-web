@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Search, Edit2, Copy, Trash2, FileText, CheckCircle2, Clock, X, ArrowLeft, GripVertical, Share2, Download, Send, Link as LinkIcon, QrCode } from 'lucide-react';
-import { MOCK_QUESTIONNAIRES } from '../constants';
-import { Questionnaire, Question, Patient } from '../types';
+import { Plus, Search, Edit2, Copy, Trash2, FileText, CheckCircle2, Clock, X, ArrowLeft, GripVertical, Share2, Download, Send, QrCode } from 'lucide-react';
+import { Questionnaire, Question } from '../types';
 import { api } from '../api';
 
 type ViewMode = 'list' | 'edit';
 
 const QuestionnaireDesign: React.FC = () => {
-  const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>(MOCK_QUESTIONNAIRES);
+  const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingData, setEditingData] = useState<Questionnaire | null>(null);
@@ -18,10 +18,32 @@ const QuestionnaireDesign: React.FC = () => {
   const [selectedPatientIds, setSelectedPatientIds] = useState<string[]>([]);
   const [distributeTab, setDistributeTab] = useState<'targeted' | 'general'>('targeted');
   const [isSending, setIsSending] = useState(false);
+  const [feedbackMsg, setFeedbackMsg] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+  const [questionnaireToDelete, setQuestionnaireToDelete] = useState<string | null>(null);
 
-  const filteredQuestionnaires = questionnaires.filter(q => 
-    q.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const showFeedback = (type: 'error' | 'success', text: string) => {
+    setFeedbackMsg({ type, text });
+    setTimeout(() => setFeedbackMsg(null), 4000);
+  };
+
+  const fetchQuestionnaires = async () => {
+    try {
+      setLoading(true);
+      const res = await api.getQuestionnaires({ q: searchTerm || undefined });
+      setQuestionnaires(res.items || []);
+    } catch (err) {
+      console.error('Failed to fetch questionnaires:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => fetchQuestionnaires(), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const filteredQuestionnaires = questionnaires;
 
   const handleOpenEditor = (questionnaire?: Questionnaire) => {
     if (questionnaire) {
@@ -29,7 +51,7 @@ const QuestionnaireDesign: React.FC = () => {
       setEditingData(JSON.parse(JSON.stringify(questionnaire)));
     } else {
       setEditingData({
-        id: `Q${Date.now()}`,
+        id: `_new_${Date.now()}`,
         title: '',
         type: 'Survey',
         questionCount: 0,
@@ -42,46 +64,68 @@ const QuestionnaireDesign: React.FC = () => {
     setViewMode('edit');
   };
 
-  const handleSaveQuestionnaire = () => {
+  const handleSaveQuestionnaire = async () => {
     if (!editingData) return;
     if (!editingData.title.trim()) {
-      alert('请输入问卷标题');
+      showFeedback('error', '请输入问卷标题');
       return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    const updatedData: Questionnaire = {
-      ...editingData,
-      questionCount: editingData.questions?.length || 0,
-      updateDate: today
-    };
+    try {
+      const payload = {
+        title: editingData.title,
+        type: editingData.type,
+        status: editingData.status,
+        questions: editingData.questions || [],
+      };
 
-    const exists = questionnaires.find(q => q.id === updatedData.id);
-    if (exists) {
-      setQuestionnaires(questionnaires.map(q => q.id === updatedData.id ? updatedData : q));
-    } else {
-      setQuestionnaires([updatedData, ...questionnaires]);
+      const isNew = editingData.id.startsWith('_new_');
+      if (isNew) {
+        await api.createQuestionnaire(payload);
+      } else {
+        await api.updateQuestionnaire(editingData.id, payload);
+      }
+
+      setViewMode('list');
+      setEditingData(null);
+      fetchQuestionnaires();
+      showFeedback('success', '问卷已保存');
+    } catch (err) {
+      console.error('Failed to save questionnaire:', err);
+      showFeedback('error', '保存失败，请重试');
     }
-    setViewMode('list');
-    setEditingData(null);
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('确定要删除这个问卷吗？')) {
-      setQuestionnaires(questionnaires.filter(q => q.id !== id));
+    setQuestionnaireToDelete(id);
+  };
+
+  const confirmDeleteQuestionnaire = async () => {
+    if (!questionnaireToDelete) return;
+    try {
+      await api.deleteQuestionnaire(questionnaireToDelete);
+      setQuestionnaireToDelete(null);
+      fetchQuestionnaires();
+    } catch (err) {
+      console.error('Failed to delete questionnaire:', err);
+      showFeedback('error', '删除失败，请重试');
     }
   };
 
-  const handleCopy = (questionnaire: Questionnaire) => {
-    const today = new Date().toISOString().split('T')[0];
-    const newQuestionnaire: Questionnaire = JSON.parse(JSON.stringify(questionnaire));
-    newQuestionnaire.id = `Q${Date.now()}`;
-    newQuestionnaire.title = `${questionnaire.title} (副本)`;
-    newQuestionnaire.status = 'Draft';
-    newQuestionnaire.updateDate = today;
-    newQuestionnaire.usageCount = 0;
-    
-    setQuestionnaires([newQuestionnaire, ...questionnaires]);
+  const handleCopy = async (questionnaire: Questionnaire) => {
+    try {
+      await api.createQuestionnaire({
+        title: `${questionnaire.title} (副本)`,
+        type: questionnaire.type,
+        status: 'Draft',
+        questions: questionnaire.questions || [],
+      });
+      fetchQuestionnaires();
+      showFeedback('success', '问卷已复制');
+    } catch (err) {
+      console.error('Failed to copy questionnaire:', err);
+      showFeedback('error', '复制失败');
+    }
   };
 
   // --- Distribution Functions ---
@@ -98,16 +142,20 @@ const QuestionnaireDesign: React.FC = () => {
   };
 
   const handleSendTasks = async () => {
-    if (selectedPatientIds.length === 0) return;
+    if (selectedPatientIds.length === 0 || !distributeModal.questionnaire) return;
     setIsSending(true);
     try {
-      // Mocking the API call for sending tasks
-      await new Promise(resolve => setTimeout(resolve, 800));
-      alert(`已成功向 ${selectedPatientIds.length} 位患者定向下发问卷！患者将在微信收到订阅消息通知。`);
+      const patientData = selectedPatientIds.map(pid => {
+        const p = patients.find(pt => (pt._openid || pt.id) === pid);
+        return { id: pid, name: p?.nickName || p?.name || '患者' };
+      });
+      await api.distributeQuestionnaire(distributeModal.questionnaire.id, patientData);
       setDistributeModal({ isOpen: false, questionnaire: null });
+      showFeedback('success', `已成功向 ${selectedPatientIds.length} 位患者下发问卷`);
+      fetchQuestionnaires();
     } catch (err) {
       console.error(err);
-      alert('下发失败，请重试');
+      showFeedback('error', '下发失败，请重试');
     } finally {
       setIsSending(false);
     }
@@ -164,6 +212,13 @@ const QuestionnaireDesign: React.FC = () => {
   if (viewMode === 'edit' && editingData) {
     return (
       <div className="space-y-6">
+        {feedbackMsg && (
+          <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${
+            feedbackMsg.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+          }`}>
+            {feedbackMsg.text}
+          </div>
+        )}
         {/* Editor Top Bar */}
         <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center justify-between sticky top-0 z-10">
           <div className="flex items-center gap-4 flex-1">
@@ -350,6 +405,13 @@ const QuestionnaireDesign: React.FC = () => {
   // --- List View ---
   return (
     <div className="space-y-6">
+      {feedbackMsg && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${
+          feedbackMsg.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+        }`}>
+          {feedbackMsg.text}
+        </div>
+      )}
       {/* Top Toolbar */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-4 w-full md:w-auto">
@@ -453,7 +515,7 @@ const QuestionnaireDesign: React.FC = () => {
                      <button 
                        className="text-slate-500 hover:text-blue-600 text-xs font-medium flex items-center transition-colors"
                        title="导出为PDF/Word文档"
-                       onClick={() => alert('此功能将导出空白问卷文档供打印')}
+                       onClick={() => showFeedback('success', '导出功能开发中，敬请期待')}
                      >
                        <Download size={14} className="mr-1" /> 导出
                      </button>
@@ -593,8 +655,14 @@ const QuestionnaireDesign: React.FC = () => {
                       <code className="flex-1 bg-slate-50 px-3 py-2 rounded text-sm text-slate-700 select-all">
                         pages/questionnaire/detail?id={distributeModal.questionnaire.id}
                       </code>
-                      <button 
-                        onClick={() => alert('路径已复制到剪贴板')}
+                      <button
+                        onClick={() => {
+                          const path = `pages/questionnaire/detail?id=${distributeModal.questionnaire?.id}`;
+                          navigator.clipboard.writeText(path).then(
+                            () => showFeedback('success', '路径已复制到剪贴板'),
+                            () => showFeedback('error', '复制失败，请手动选中复制')
+                          );
+                        }}
                         className="p-2 text-primary-600 hover:bg-primary-50 rounded-lg transition-colors"
                         title="复制路径"
                       >
@@ -604,6 +672,30 @@ const QuestionnaireDesign: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {questionnaireToDelete && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">确认删除</h3>
+            <p className="text-slate-600 mb-6">确定要删除这个问卷吗？此操作不可恢复。</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setQuestionnaireToDelete(null)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+              >
+                取消
+              </button>
+              <button
+                onClick={confirmDeleteQuestionnaire}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                确认删除
+              </button>
             </div>
           </div>
         </div>

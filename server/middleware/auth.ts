@@ -8,6 +8,7 @@ export interface AuthRequest extends Request {
     username: string;
     nickName: string;
     role: string;
+    _openid?: string;
   };
 }
 
@@ -31,6 +32,13 @@ export const requireAuth = (req: AuthRequest, res: Response, next: NextFunction)
 export const requireDoctor = (req: AuthRequest, res: Response, next: NextFunction) => {
   if (req.user?.role !== 'doctor') {
     return res.status(403).json({ error: 'Forbidden: Requires doctor role' });
+  }
+  next();
+};
+
+export const requirePatient = (req: AuthRequest, res: Response, next: NextFunction) => {
+  if (req.user?.role !== 'user') {
+    return res.status(403).json({ error: 'Forbidden: Requires patient role' });
   }
   next();
 };

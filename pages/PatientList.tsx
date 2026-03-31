@@ -7,6 +7,7 @@ const PatientList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showQRCode, setShowQRCode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [doctorInfo, setDoctorInfo] = useState({ nickName: '医生', title: '', hospital: '', avatar: '' });
   const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [offset, setOffset] = useState(0);
@@ -15,6 +16,7 @@ const PatientList: React.FC = () => {
   const navigate = useNavigate();
 
   const [patientToDelete, setPatientToDelete] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchPatients = async (reset = false) => {
@@ -43,18 +45,6 @@ const PatientList: React.FC = () => {
       fetchPatients(true);
     }, 300);
 
-    const handleDelete = async (patientOpenid: string) => {
-    if (window.confirm('确定要删除该患者吗？此操作不可恢复。')) {
-      try {
-        await api.deletePatient(patientOpenid);
-        setPatients(prev => prev.filter(p => (p._openid || p.id) !== patientOpenid));
-      } catch (error) {
-        console.error('Failed to delete patient:', error);
-        alert('删除失败，请重试');
-      }
-    }
-  };
-
   return () => clearTimeout(timer);
   }, [searchTerm]);
 
@@ -72,15 +62,26 @@ const PatientList: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (showQRCode) {
+      api.getMe().then(data => {
+        setDoctorInfo({
+          nickName: data.nickName || '医生',
+          title: data.title || '',
+          hospital: data.hospital || '',
+          avatar: data.avatar || '',
+        });
+      }).catch(() => {});
+    }
+  }, [showQRCode]);
+
   const handleCopy = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleDelete = async (patientOpenid: string) => {
-    // We shouldn't use window.confirm in iframe as it might not work well, but let's use it for simplicity unless we build a modal.
-    // The instructions say: "IMPORTANT: Do NOT use confirm(), window.confirm(), alert() or window.alert() in the code. The code is running in an iframe and the user will NOT see the confirmation dialog or alerts. Instead, use custom modal UI for these."
-    // Ah! I need to build a custom modal for delete confirmation.
+  const handleDelete = (patientOpenid: string) => {
+    setDeleteError(null);
     setPatientToDelete(patientOpenid);
   };
 
@@ -99,7 +100,7 @@ const PatientList: React.FC = () => {
           />
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-medium">
+          <button className="flex items-center px-4 py-2.5 bg-white border border-slate-200 text-slate-400 rounded-xl font-medium cursor-not-allowed" disabled title="筛选功能开发中">
             <Filter size={18} className="mr-2" />
             筛选
           </button>
@@ -245,16 +246,16 @@ const PatientList: React.FC = () => {
                {/* Doctor Info Section */}
                <div className="flex items-center gap-6 mb-10">
                  <div className="w-[88px] h-[88px] rounded-full bg-slate-100 shrink-0 overflow-hidden shadow-sm border border-slate-50">
-                    <img 
-                      src="https://ui-avatars.com/api/?name=Dr+Wang&background=0D8ABC&color=fff&size=200" 
-                      className="w-full h-full object-cover" 
-                      alt="Avatar" 
+                    <img
+                      src={doctorInfo.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(doctorInfo.nickName)}&background=0D8ABC&color=fff&size=200`}
+                      className="w-full h-full object-cover"
+                      alt="Avatar"
                     />
                  </div>
                  <div className="space-y-1.5">
-                   <h4 className="text-xl text-slate-700 font-normal">王主任</h4>
-                   <p className="text-xs text-slate-500">副主任医师&nbsp;&nbsp;&nbsp;南方医科大学珠江医院</p>
-                   <p className="text-xs text-slate-500">南方医科大学珠江医院</p>
+                   <h4 className="text-xl text-slate-700 font-normal">{doctorInfo.nickName}</h4>
+                   {doctorInfo.title && <p className="text-xs text-slate-500">{doctorInfo.title}</p>}
+                   {doctorInfo.hospital && <p className="text-xs text-slate-500">{doctorInfo.hospital}</p>}
                  </div>
                </div>
                
@@ -289,7 +290,10 @@ const PatientList: React.FC = () => {
         <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden p-6">
             <h3 className="text-lg font-bold text-slate-800 mb-2">确认删除</h3>
-            <p className="text-slate-600 mb-6">您确定要删除该患者吗？此操作不可恢复。</p>
+            <p className="text-slate-600 mb-4">您确定要删除该患者吗？此操作不可恢复。</p>
+            {deleteError && (
+              <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg mb-4">{deleteError}</p>
+            )}
             <div className="flex justify-end gap-3">
               <button 
                 onClick={() => setPatientToDelete(null)}
@@ -299,12 +303,14 @@ const PatientList: React.FC = () => {
               </button>
               <button 
                 onClick={async () => {
+                  setDeleteError(null);
                   try {
                     await api.deletePatient(patientToDelete);
                     setPatients(patients.filter(p => (p._openid || p.id) !== patientToDelete));
                     setPatientToDelete(null);
                   } catch (err) {
                     console.error('Failed to delete patient', err);
+                    setDeleteError('删除失败，请重试');
                   }
                 }}
                 className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"

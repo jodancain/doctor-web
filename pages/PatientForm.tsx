@@ -6,9 +6,19 @@ import { api } from '../api';
 const PatientForm: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState<any>({});
+  const [formData, setFormData] = useState<any>({
+    gender: 'Male',
+    status: 'Stable',
+    targetUricAcid: 360,
+  });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+
+  const showFeedback = (type: 'error' | 'success', text: string) => {
+    setFeedback({ type, text });
+    setTimeout(() => setFeedback(null), 4000);
+  };
 
   useEffect(() => {
     if (id) {
@@ -28,10 +38,13 @@ const PatientForm: React.FC = () => {
   }, [id]);
 
   const handleSave = async () => {
-    if (!id) return;
+    if (!formData.nickName && !formData.name) {
+      showFeedback('error', '请输入患者姓名');
+      return;
+    }
     try {
       setSaving(true);
-      await api.updatePatient(id, {
+      const payload = {
         nickName: formData.nickName,
         age: formData.age,
         gender: formData.gender,
@@ -39,11 +52,16 @@ const PatientForm: React.FC = () => {
         status: formData.status,
         targetUricAcid: formData.targetUricAcid,
         medication: formData.medication,
-      });
+      };
+      if (id) {
+        await api.updatePatient(id, payload);
+      } else {
+        await api.createPatient(payload);
+      }
       navigate('/patients');
     } catch (error) {
-      console.error('Failed to update patient:', error);
-      alert('保存失败，请重试');
+      console.error('Failed to save patient:', error);
+      showFeedback('error', '保存失败，请重试');
     } finally {
       setSaving(false);
     }
@@ -55,6 +73,13 @@ const PatientForm: React.FC = () => {
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-slate-100 min-h-[600px] flex flex-col animate-fade-in">
+      {feedback && (
+        <div className={`fixed top-4 right-4 z-50 px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${
+          feedback.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+        }`}>
+          {feedback.text}
+        </div>
+      )}
       {/* Breadcrumb / Header */}
       <div className="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
         <div className="flex items-center text-sm text-slate-500">
@@ -62,7 +87,7 @@ const PatientForm: React.FC = () => {
             患者列表
           </span>
           <ChevronRight size={14} className="mx-2 text-slate-300" />
-          <span className="font-bold text-slate-800">编辑档案</span>
+          <span className="font-bold text-slate-800">{id ? '编辑档案' : '新建档案'}</span>
         </div>
       </div>
 

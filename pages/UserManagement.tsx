@@ -23,6 +23,7 @@ export default function UserManagement() {
   const [selectedOrg, setSelectedOrg] = useState('全部');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [userToDelete, setUserToDelete] = useState<number | null>(null);
   
   // Modal state
   const [formData, setFormData] = useState({
@@ -75,9 +76,13 @@ export default function UserManagement() {
   };
 
   const handleDelete = (id: number) => {
-    if (window.confirm('确定要删除该用户吗？')) {
-      setUsers(users.filter(u => u.id !== id));
-    }
+    setUserToDelete(id);
+  };
+
+  const confirmDeleteUser = () => {
+    if (userToDelete === null) return;
+    setUsers(users.filter(u => u.id !== userToDelete));
+    setUserToDelete(null);
   };
 
   const toggleStatus = (id: number) => {
@@ -306,6 +311,30 @@ export default function UserManagement() {
                 className="px-4 py-2 text-sm font-medium text-white bg-primary-600 rounded-lg hover:bg-primary-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 保存
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {userToDelete !== null && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden p-6">
+            <h3 className="text-lg font-bold text-slate-800 mb-2">确认删除</h3>
+            <p className="text-slate-600 mb-6">确定要删除该用户吗？此操作不可恢复。</p>
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => setUserToDelete(null)}
+                className="px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors font-medium"
+              >
+                取消
+              </button>
+              <button
+                onClick={confirmDeleteUser}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              >
+                确认删除
               </button>
             </div>
           </div>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { LayoutDashboard, Users, Stethoscope, Settings, Menu, X, Bell, Activity, ClipboardList, ClipboardCheck, FileEdit, Database, ChevronDown, UserCog, Shield, Building2, Award, BookOpen, ChevronUp, LogOut, Check, User } from 'lucide-react';
+import { LayoutDashboard, Users, Stethoscope, Settings, Menu, X, Bell, Activity, ClipboardList, ClipboardCheck, FileEdit, Database, ChevronDown, UserCog, Shield, Building2, Award, BookOpen, ChevronUp, LogOut, Check, User, MessageSquare } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { api } from '../api';
 
@@ -21,6 +21,7 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
   const [currentOrg, setCurrentOrg] = useState('南方医科大学珠江医院');
   const [doctorName, setDoctorName] = useState('医生');
   const [avatar, setAvatar] = useState('');
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -36,7 +37,18 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
     fetchProfile();
 
     window.addEventListener('profileUpdated', fetchProfile);
-    return () => window.removeEventListener('profileUpdated', fetchProfile);
+
+    // Poll unread message count
+    const fetchUnread = () => {
+      api.getUnreadCount().then(data => setUnreadMsgCount(data.unreadCount || 0)).catch(() => {});
+    };
+    fetchUnread();
+    const unreadInterval = setInterval(fetchUnread, 30000);
+
+    return () => {
+      window.removeEventListener('profileUpdated', fetchProfile);
+      clearInterval(unreadInterval);
+    };
   }, []);
   
   const navigate = useNavigate();
@@ -49,6 +61,10 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
     if (pathname.includes('/patients')) return {
       title: '患者管理',
       desc: '管理患者档案、随访记录及治疗方案'
+    };
+    if (pathname.includes('/chat')) return {
+      title: '消息中心',
+      desc: '与患者在线沟通交流'
     };
     if (pathname.includes('/ai-consult')) return {
       title: '临床决策辅助',
@@ -135,6 +151,29 @@ const Layout: React.FC<LayoutProps> = ({ children, onLogout }) => {
             <div className="px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 mt-4">临床管理</div>
             <NavItem path="/dashboard" icon={LayoutDashboard} label="工作台" />
             <NavItem path="/patients" icon={Users} label="患者列表" />
+
+            {/* Chat with unread badge */}
+            <button
+              onClick={() => {
+                navigate('/chat');
+                setIsMobileMenuOpen(false);
+              }}
+              className={`flex items-center justify-between w-full px-4 py-3 mb-1 text-sm font-medium transition-colors rounded-lg ${
+                location.pathname.includes('/chat')
+                  ? 'bg-primary-50 text-primary-600'
+                  : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              }`}
+            >
+              <div className="flex items-center">
+                <MessageSquare className={`w-5 h-5 mr-3 ${location.pathname.includes('/chat') ? 'text-primary-600' : 'text-slate-400'}`} />
+                消息中心
+              </div>
+              {unreadMsgCount > 0 && (
+                <span className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  {unreadMsgCount > 99 ? '99+' : unreadMsgCount}
+                </span>
+              )}
+            </button>
             
             {/* Questionnaire Menu Group */}
             <div>

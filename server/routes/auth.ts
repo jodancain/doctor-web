@@ -2,8 +2,7 @@ import { Router, Response } from 'express';
 import { z } from 'zod';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import rateLimit from 'express-rate-limit';
-import { db, _ } from '../db';
+import { prisma } from '../db';
 import { logger } from '../logger';
 import { requireAuth, AuthRequest } from '../middleware/auth';
 
@@ -14,49 +13,33 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required'),
 });
 
-// const loginLimiter = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   max: 5, // Limit each IP to 5 login requests per windowMs
-//   message: { error: 'Too many login attempts, please try again later.' },
-// });
-
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = loginSchema.parse(req.body);
 
-    const result = await db.collection('users').where({ username }).limit(1).get();
-    const user = result.data[0];
+    const user = await prisma.user.findUnique({ where: { username } });
 
     if (!user) {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    if (user.role !== 'doctor') {
-      return res.status(403).json({ error: 'Access denied: Only doctors can login to this portal' });
+    if (user.role !== 'doctor' && user.role !== 'user') {
+      return res.status(403).json({ error: 'Access denied: Invalid user role' });
     }
 
-    // Password verification
-    // NOTE: If the database contains plaintext passwords, you MUST migrate them.
-    // Migration strategy:
-    // 1. Check if the password starts with '$2b$' (bcrypt prefix).
-    // 2. If not, compare plaintext. If it matches, hash it and update the DB immediately.
-    // 3. For security, it's better to run a one-time script to hash all passwords.
+    // Password verification with bcrypt migration support
     let isMatch = false;
-    const dbPassword = String(user.password); // Convert to string in case it's stored as a number
+    const dbPassword = String(user.password);
 
     if (dbPassword.startsWith('$2b$')) {
       isMatch = await bcrypt.compare(password, dbPassword);
     } else {
-      // Fallback for plaintext (WARNING: MIGRATION NEEDED)
       logger.warn(`Plaintext password detected for user ${username}. Please migrate to bcrypt.`);
       isMatch = password === dbPassword;
-      
+
       if (isMatch) {
-        // Auto-migrate on successful login
         const hashedPassword = await bcrypt.hash(password, 10);
-        await db.collection('users').doc(user._id).update({
-          password: hashedPassword
-        });
+        await prisma.user.update({ where: { id: user.id }, data: { password: hashedPassword } });
         logger.info(`Migrated password for user ${username} to bcrypt.`);
       }
     }
@@ -66,17 +49,15 @@ router.post('/login', async (req, res) => {
     }
 
     const payload = {
-      id: user._id,
+      id: user.id,
       username: user.username,
       nickName: user.nickName,
       role: user.role,
+      _openid: user.openid || undefined,
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '1d' });
 
-    // Cookie 安全属性需要和部署协议匹配：
-    // - 不是 HTTPS 时，secure=true 的 cookie 会被浏览器拒绝写入，后续接口就会拿不到 token。
-    // - HTTPS/跨站场景下，为了让浏览器带 cookie，需要 sameSite=None + secure=true。
     const xForwardedProto = String(req.headers['x-forwarded-proto'] || '');
     const cookieSecureEnv = process.env.COOKIE_SECURE;
     const isSecure =
@@ -85,22 +66,20 @@ router.post('/login', async (req, res) => {
         : cookieSecureEnv === 'true' || cookieSecureEnv === '1';
     const sameSite = (isSecure ? 'none' : 'lax') as const;
 
-    // Set httpOnly cookie
-    // Why httpOnly? It prevents client-side scripts (XSS) from accessing the token.
     res.cookie('token', token, {
       httpOnly: true,
       secure: isSecure,
       sameSite,
-      maxAge: 24 * 60 * 60 * 1000, // 1 day
+      maxAge: 24 * 60 * 60 * 1000,
     });
 
-    res.json(payload);
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: (error as any).errors[0].message });
-      }
+    return res.json(payload);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
     logger.error({ error }, 'Login error');
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    return res.status(500).json({ error: error.message || 'Internal server error' });
   }
 });
 
@@ -113,43 +92,36 @@ router.post('/logout', (req, res) => {
       : cookieSecureEnv === 'true' || cookieSecureEnv === '1';
   const sameSite = (isSecure ? 'none' : 'lax') as const;
 
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: isSecure,
-    sameSite,
-  });
+  res.clearCookie('token', { httpOnly: true, secure: isSecure, sameSite });
   res.json({ success: true });
 });
 
 router.get('/me', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
-    const result = await db.collection('users').doc(req.user!.id).get();
-    if (!result.data || result.data.length === 0) {
+    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+    if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
-    const user = result.data[0];
-    
-    // Parse org string if it exists to get hospital and department
+
     let hospital = user.hospital;
     let department = user.department;
-    
+
     if (user.org && (!hospital || !department)) {
       const parts = user.org.split(' ');
       if (!hospital && parts.length > 0) hospital = parts[0];
       if (!department && parts.length > 1) department = parts[1];
     }
 
-    // Remove sensitive info and map fields
-    const { password, name, ...safeUser } = user;
-    res.json({
+    const { password, ...safeUser } = user;
+    return res.json({
       ...safeUser,
-      nickName: user.nickName || name || user.username,
+      nickName: user.nickName || user.name || user.username,
       hospital: hospital || '',
       department: department || '',
     });
   } catch (error) {
     logger.error({ error }, 'Get me error');
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
@@ -161,40 +133,65 @@ const updateProfileSchema = z.object({
   licenseNo: z.string().optional(),
   hospital: z.string().optional(),
   avatar: z.string().optional(),
+  currentPassword: z.string().optional(),
+  newPassword: z.string().min(6).optional(),
 });
 
 router.put('/profile', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const updateData = updateProfileSchema.parse(req.body);
-    
-    // Also update the org string if hospital or department changes
-    let orgUpdate = {};
-    if (updateData.hospital || updateData.department) {
-      const userResult = await db.collection('users').doc(req.user!.id).get();
-      const user = userResult.data[0];
-      
-      const currentHospital = updateData.hospital || user.hospital || (user.org ? user.org.split(' ')[0] : '');
-      const currentDept = updateData.department || user.department || (user.org ? user.org.split(' ')[1] : '');
-      
-      orgUpdate = {
-        org: `${currentHospital} ${currentDept}`.trim()
-      };
+
+    // Handle password change
+    if (updateData.currentPassword && updateData.newPassword) {
+      const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      const dbPassword = String(user.password);
+      let passwordMatch = false;
+      if (dbPassword.startsWith('$2b$')) {
+        passwordMatch = await bcrypt.compare(updateData.currentPassword, dbPassword);
+      } else {
+        passwordMatch = updateData.currentPassword === dbPassword;
+      }
+
+      if (!passwordMatch) {
+        return res.status(400).json({ error: '当前密码不正确' });
+      }
+
+      const hashedPassword = await bcrypt.hash(updateData.newPassword, 10);
+      await prisma.user.update({ where: { id: req.user!.id }, data: { password: hashedPassword } });
+      logger.info(`Password changed for user ${req.user!.username}`);
+      return res.json({ success: true });
     }
 
-    await db.collection('users').doc(req.user!.id).update({
-      ...updateData,
-      ...orgUpdate,
-      // If nickName is updated, also update name for backward compatibility
-      ...(updateData.nickName ? { name: updateData.nickName } : {}),
-      updatedAt: new Date()
-    });
-    res.json({ success: true });
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: (error as any).errors[0].message });
+    // Profile update
+    const { currentPassword, newPassword, ...profileData } = updateData;
+
+    let orgUpdate: string | undefined;
+    if (profileData.hospital || profileData.department) {
+      const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+      if (user) {
+        const currentHospital = profileData.hospital || user.hospital || (user.org ? user.org.split(' ')[0] : '');
+        const currentDept = profileData.department || user.department || (user.org ? user.org.split(' ')[1] : '');
+        orgUpdate = `${currentHospital} ${currentDept}`.trim();
       }
+    }
+
+    await prisma.user.update({
+      where: { id: req.user!.id },
+      data: {
+        ...profileData,
+        ...(orgUpdate ? { org: orgUpdate } : {}),
+        ...(profileData.nickName ? { name: profileData.nickName } : {}),
+      },
+    });
+    return res.json({ success: true });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
     logger.error({ error }, 'Update profile error');
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 

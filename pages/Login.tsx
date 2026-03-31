@@ -11,6 +11,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -71,11 +72,11 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
              </div>
              
              <div className="flex items-center justify-between mt-2">
-               <label className="flex items-center">
-                 <input type="checkbox" className="w-4 h-4 rounded text-primary-600 focus:ring-primary-500 border-gray-300" />
-                 <span className="ml-2 text-sm text-slate-500">记住我</span>
+               <label className="flex items-center cursor-pointer">
+                 <input type="checkbox" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} className="w-4 h-4 rounded text-primary-600 focus:ring-primary-500 border-gray-300" />
+                 <span className="ml-2 text-sm text-slate-500">记住我（7 天免登录）</span>
                </label>
-               <a href="#" className="text-sm text-primary-600 hover:text-primary-700 font-medium">忘记密码?</a>
+               <span className="text-sm text-slate-400">忘记密码请联系管理员</span>
              </div>
 
              <button 

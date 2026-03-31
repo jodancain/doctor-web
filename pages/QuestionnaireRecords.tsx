@@ -1,17 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, Filter, Eye, Download, X, FileText } from 'lucide-react';
-import { MOCK_QUESTIONNAIRE_RECORDS } from '../constants';
 import { QuestionnaireRecord, QuestionnaireAnswer } from '../types';
+import { api } from '../api';
 
 const QuestionnaireRecords: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [records, setRecords] = useState<QuestionnaireRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [selectedRecord, setSelectedRecord] = useState<QuestionnaireRecord | null>(null);
 
-  const filteredRecords = MOCK_QUESTIONNAIRE_RECORDS.filter(record => 
-    record.questionnaireName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.patientId.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchRecords = async () => {
+    try {
+      setLoading(true);
+      const res = await api.getQuestionnaireRecords({ q: searchTerm || undefined });
+      setRecords(res.items || []);
+    } catch (err) {
+      console.error('Failed to fetch questionnaire records:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => fetchRecords(), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const filteredRecords = records;
 
   const renderAnswerValue = (answer: QuestionnaireAnswer) => {
     if (Array.isArray(answer.value)) {
@@ -28,11 +43,19 @@ const QuestionnaireRecords: React.FC = () => {
       {/* Toolbar */}
       <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex flex-col md:flex-row justify-between items-center gap-4">
         <div className="flex items-center gap-2 w-full md:w-auto">
-          <button className="flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors">
+          <button
+            className="flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-400 rounded-lg text-sm font-medium cursor-not-allowed"
+            title="筛选功能开发中"
+            disabled
+          >
             <Filter size={16} className="mr-2" />
             筛选记录
           </button>
-          <button className="flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 text-sm font-medium transition-colors">
+          <button
+            className="flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-400 rounded-lg text-sm font-medium cursor-not-allowed"
+            title="导出功能开发中"
+            disabled
+          >
             <Download size={16} className="mr-2" />
             导出数据
           </button>
@@ -65,7 +88,13 @@ const QuestionnaireRecords: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredRecords.length > 0 ? (
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                    加载中...
+                  </td>
+                </tr>
+              ) : filteredRecords.length > 0 ? (
                 filteredRecords.map((record) => (
                   <tr key={record.id} className="hover:bg-slate-50/50 transition-colors">
                     <td className="px-6 py-4">

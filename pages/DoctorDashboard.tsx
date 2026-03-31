@@ -153,10 +153,16 @@ const DoctorDashboard: React.FC = () => {
               <span className="font-bold text-xl">0</span>
             </div>
           </div>
-          <button className="w-full bg-white text-primary-600 py-3 rounded-xl font-bold shadow-sm hover:bg-slate-50 transition-colors">
+          <button
+            onClick={() => navigate('/patients')}
+            className="w-full bg-white text-primary-600 py-3 rounded-xl font-bold shadow-sm hover:bg-slate-50 transition-colors"
+          >
             开始接诊
           </button>
-          <button className="w-full mt-3 bg-primary-700 text-white py-3 rounded-xl font-bold border border-primary-500 hover:bg-primary-800 transition-colors">
+          <button
+            onClick={() => navigate('/chat')}
+            className="w-full mt-3 bg-primary-700 text-white py-3 rounded-xl font-bold border border-primary-500 hover:bg-primary-800 transition-colors"
+          >
             群发随访消息
           </button>
         </div>

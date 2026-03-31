@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { ArrowLeft, FileText, Activity, AlertCircle, Droplets, Dumbbell, Pill, Apple } from 'lucide-react';
+import { ArrowLeft, FileText, Activity, AlertCircle, Droplets, Dumbbell, Pill, Apple, MessageSquare } from 'lucide-react';
 import { api } from '../api';
 
 const PatientDetail: React.FC = () => {
@@ -44,13 +44,14 @@ const PatientDetail: React.FC = () => {
       const currentOffset = reset ? 0 : offset;
       const data = await api.getPatientRecords(id, activeTab, { limit, offset: currentOffset });
       
+      const items = data.items || [];
       if (reset) {
-        setRecords(data.items);
+        setRecords(items);
       } else {
-        setRecords(prev => [...prev, ...data.items]);
+        setRecords(prev => [...prev, ...items]);
       }
-      
-      setHasMore(data.items.length === limit);
+
+      setHasMore(items.length === limit);
       setOffset(currentOffset + limit);
     } catch (error) {
       console.error('Failed to fetch records:', error);
@@ -107,11 +108,11 @@ const PatientDetail: React.FC = () => {
               {patient.nickName || patient.name}
             </h1>
             <p className="text-slate-500 mt-1">
-              {patient.gender === 'Male' ? '男' : patient.gender === 'Female' ? '女' : '未知'} | {patient.age ? `${patient.age}岁` : '--'}
+              {patient.gender === 'Male' ? '男' : patient.gender === 'Female' ? '女' : patient.gender || '未知'} | {patient.age ? `${patient.age}岁` : '--'}
             </p>
           </div>
         </div>
-        <div className="flex gap-4 text-sm">
+        <div className="flex gap-4 text-sm items-start">
           <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
             <span className="text-slate-400 block mb-1">主要诊断</span>
             <span className="font-medium text-slate-800">{patient.diagnosis || '痛风'}</span>
@@ -120,6 +121,13 @@ const PatientDetail: React.FC = () => {
             <span className="text-slate-400 block mb-1">当前用药</span>
             <span className="font-medium text-slate-800 truncate block" title={patient.medication || '暂无记录'}>{patient.medication || '暂无记录'}</span>
           </div>
+          <button
+            onClick={() => navigate(`/chat/${id}`)}
+            className="flex items-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors font-medium shadow-sm text-sm"
+          >
+            <MessageSquare size={16} />
+            发消息
+          </button>
         </div>
       </div>
 

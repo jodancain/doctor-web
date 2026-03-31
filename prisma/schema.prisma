@@ -1,0 +1,234 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+// ─── 用户（医生 + 患者） ────────────────────────────────────────
+
+model User {
+  id         String   @id @default(uuid())
+  username   String   @unique
+  password   String
+  nickName   String?
+  name       String?
+  role       String   @default("user") // 'doctor' | 'user'
+  openid     String?  @unique @map("_openid")
+  hospital   String?
+  department String?
+  org        String?
+  title      String?
+  licenseNo  String?
+  avatar     String?  @db.Text
+  gender     String?
+  age        Int?
+  diagnosis  String?
+  status     String?
+  targetUricAcid Int?
+  medication String?  @db.Text
+  lastVisit  String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  educationArticles  EducationArticle[]
+  questionnaires     Questionnaire[]
+
+  @@index([role])
+  @@map("users")
+}
+
+// ─── 健康记录（6 种类型） ───────────────────────────────────────
+
+model UaRecord {
+  id        String @id @default(uuid())
+  openid    String @map("_openid")
+  value     Float
+  timestamp BigInt
+  note      String?
+  createdAt BigInt  @default(0)
+
+  @@index([openid])
+  @@index([openid, timestamp])
+  @@map("ua_records")
+}
+
+model AttackRecord {
+  id        String  @id @default(uuid())
+  openid    String  @map("_openid")
+  timestamp BigInt
+  joints    Json?
+  painLevel Int?
+  triggers  Json?
+  duration  String?
+  remark    String? @db.Text
+  createdAt BigInt  @default(0)
+
+  @@index([openid])
+  @@index([openid, timestamp])
+  @@map("attack_records")
+}
+
+model WaterRecord {
+  id        String @id @default(uuid())
+  openid    String @map("_openid")
+  amount    Float
+  timestamp BigInt
+  createdAt BigInt @default(0)
+
+  @@index([openid])
+  @@index([openid, timestamp])
+  @@map("water_records")
+}
+
+model ExerciseRecord {
+  id        String  @id @default(uuid())
+  openid    String  @map("_openid")
+  type      String?
+  duration  Float
+  timestamp BigInt
+  createdAt BigInt  @default(0)
+
+  @@index([openid])
+  @@index([openid, timestamp])
+  @@map("exercise_records")
+}
+
+model MedicationReminder {
+  id        String  @id @default(uuid())
+  openid    String  @map("_openid")
+  name      String?
+  dosage    String?
+  frequency String?
+  status    String?
+  timestamp BigInt
+  createdAt BigInt  @default(0)
+
+  @@index([openid])
+  @@index([openid, timestamp])
+  @@map("medication_reminders")
+}
+
+model DietRecord {
+  id         String  @id @default(uuid())
+  openid     String  @map("_openid")
+  name       String?
+  mealType   String?
+  purineLevel String?
+  color      String?
+  remark     String? @db.Text
+  timestamp  BigInt
+  createdAt  BigInt  @default(0)
+
+  @@index([openid])
+  @@index([openid, timestamp])
+  @@map("diet_records")
+}
+
+// ─── 宣教文章 ───────────────────────────────────────────────────
+
+model EducationArticle {
+  id        String   @id @default(uuid())
+  title     String
+  content   String?  @db.LongText
+  category  String?
+  readTime  Int?
+  coverUrl  String?  @db.Text
+  status    String   @default("草稿")
+  views     Int      @default(0)
+  authorId  String
+  author    User     @relation(fields: [authorId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([category])
+  @@index([status])
+  @@index([createdAt])
+  @@map("education_articles")
+}
+
+// ─── 问卷 ───────────────────────────────────────────────────────
+
+model Questionnaire {
+  id            String   @id @default(uuid())
+  title         String
+  type          String   @default("Survey")
+  status        String   @default("Draft")
+  questions     Json?
+  questionCount Int      @default(0)
+  usageCount    Int      @default(0)
+  authorId      String
+  author        User     @relation(fields: [authorId], references: [id])
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  records       QuestionnaireRecord[]
+
+  @@index([status])
+  @@index([updatedAt])
+  @@map("questionnaires")
+}
+
+model QuestionnaireRecord {
+  id                String  @id @default(uuid())
+  questionnaireId   String
+  questionnaire     Questionnaire @relation(fields: [questionnaireId], references: [id])
+  questionnaireName String
+  patientId         String
+  patientName       String?
+  submitDate        String
+  score             Float?
+  result            String? @db.Text
+  status            String  @default("Completed")
+  answers           Json?
+  createdAt         BigInt  @default(0)
+
+  @@index([questionnaireId])
+  @@index([patientId])
+  @@index([submitDate])
+  @@map("questionnaire_records")
+}
+
+model PatientTask {
+  id          String   @id @default(uuid())
+  patientId   String
+  patientName String?
+  taskType    String   @default("questionnaire")
+  referenceId String
+  title       String?
+  status      String   @default("pending")
+  doctorId    String?
+  doctorName  String?
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+
+  @@index([patientId])
+  @@index([patientId, status])
+  @@index([referenceId])
+  @@map("patient_tasks")
+}
+
+// ─── 消息（senderId/receiverId 可能是 User.id 或 openid） ───────
+
+model Message {
+  id             String  @id @default(uuid())
+  conversationId String
+  senderId       String
+  senderRole     String
+  senderName     String?
+  receiverId     String
+  receiverName   String?
+  content        String  @db.LongText
+  type           String  @default("text")
+  read           Boolean @default(false)
+  createdAt      BigInt
+
+  @@index([conversationId])
+  @@index([conversationId, createdAt])
+  @@index([senderId])
+  @@index([receiverId])
+  @@index([receiverId, senderRole, read])
+  @@map("messages")
+}
