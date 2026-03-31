@@ -51,7 +51,7 @@ const QuestionnaireDesign: React.FC = () => {
       setEditingData(JSON.parse(JSON.stringify(questionnaire)));
     } else {
       setEditingData({
-        id: `Q${Date.now()}`,
+        id: `_new_${Date.now()}`,
         title: '',
         type: 'Survey',
         questionCount: 0,
@@ -79,7 +79,7 @@ const QuestionnaireDesign: React.FC = () => {
         questions: editingData.questions || [],
       };
 
-      const isNew = editingData.id.startsWith('Q') && editingData.id.length < 20;
+      const isNew = editingData.id.startsWith('_new_');
       if (isNew) {
         await api.createQuestionnaire(payload);
       } else {

@@ -44,8 +44,8 @@ export const api = {
 
   async getPatients(params?: { limit?: number; offset?: number; q?: string }) {
     const searchParams = new URLSearchParams();
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
+    if (params?.offset !== undefined) searchParams.set('offset', params.offset.toString());
     if (params?.q) searchParams.set('q', params.q);
 
     const res = await fetch(`/api/patients?${searchParams.toString()}`, { credentials: 'include' });
@@ -87,8 +87,8 @@ export const api = {
 
   async getPatientRecords(patientOpenid: string, type: string, params?: { limit?: number; offset?: number }) {
     const searchParams = new URLSearchParams({ type });
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
+    if (params?.offset !== undefined) searchParams.set('offset', params.offset.toString());
 
     const res = await fetch(`/api/patients/${patientOpenid}/records?${searchParams.toString()}`, { credentials: 'include' });
     return handleResponse(res, 'Failed to fetch patient records');
@@ -107,8 +107,8 @@ export const api = {
   // Education Articles (Hospital Knowledge Base)
   async getEducationArticles(params?: { limit?: number; offset?: number; category?: string; q?: string }) {
     const searchParams = new URLSearchParams();
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
+    if (params?.offset !== undefined) searchParams.set('offset', params.offset.toString());
     if (params?.category) searchParams.set('category', params.category);
     if (params?.q) searchParams.set('q', params.q);
 
@@ -152,8 +152,8 @@ export const api = {
   // Questionnaires
   async getQuestionnaires(params?: { limit?: number; offset?: number; q?: string }) {
     const searchParams = new URLSearchParams();
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
+    if (params?.offset !== undefined) searchParams.set('offset', params.offset.toString());
     if (params?.q) searchParams.set('q', params.q);
 
     const res = await fetch(`/api/questionnaires?${searchParams.toString()}`, { credentials: 'include' });
@@ -205,8 +205,8 @@ export const api = {
 
   async getQuestionnaireRecords(params?: { limit?: number; offset?: number; q?: string }) {
     const searchParams = new URLSearchParams();
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
-    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
+    if (params?.offset !== undefined) searchParams.set('offset', params.offset.toString());
     if (params?.q) searchParams.set('q', params.q);
 
     const res = await fetch(`/api/questionnaires/records/list?${searchParams.toString()}`, { credentials: 'include' });
@@ -221,7 +221,7 @@ export const api = {
 
   async getMessages(patientOpenid: string, params?: { limit?: number; before?: number }) {
     const searchParams = new URLSearchParams();
-    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
     if (params?.before) searchParams.set('before', params.before.toString());
 
     const res = await fetch(`/api/messages/${patientOpenid}?${searchParams.toString()}`, { credentials: 'include' });

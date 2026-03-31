@@ -58,6 +58,13 @@ export default function DoctorChat() {
   // Initial load
   useEffect(() => {
     fetchConversations();
+
+    // If navigated from PatientDetail with a patientId, fetch patient name
+    if (routePatientId && !activePatientName) {
+      api.getPatient(routePatientId).then(patient => {
+        setActivePatientName(patient.nickName || patient.name || '患者');
+      }).catch(() => {});
+    }
   }, []);
 
   // Load messages when active patient changes

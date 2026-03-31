@@ -120,11 +120,26 @@ router.post('/:patientOpenid', async (req: AuthRequest, res: Response) => {
     const doctorId = req.user!.id;
     const doctorName = req.user!.nickName;
     const { patientOpenid } = req.params;
-    const { content, type = 'text', patientName = '患者' } = req.body;
+    const { content, type = 'text' } = req.body;
+    let { patientName } = req.body;
 
     if (!content || !content.trim()) {
       return res.status(400).json({ error: 'Message content is required' });
     }
+
+    // Look up patient name from database if not provided
+    if (!patientName) {
+      try {
+        const patientResult = await db.collection('users').where({ _openid: patientOpenid }).limit(1).get();
+        if (patientResult.data.length > 0) {
+          const patient = patientResult.data[0];
+          patientName = patient.nickName || patient.name || '患者';
+        }
+      } catch {
+        // Fallback to default
+      }
+    }
+    patientName = patientName || '患者';
 
     const conversationId = `${doctorId}_${patientOpenid}`;
 
