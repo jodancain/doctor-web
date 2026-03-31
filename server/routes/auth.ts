@@ -94,13 +94,13 @@ router.post('/login', async (req, res) => {
       maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
 
-    res.json(payload);
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: (error as any).errors[0].message });
-      }
+    return res.json(payload);
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
     logger.error({ error }, 'Login error');
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    return res.status(500).json({ error: error.message || 'Internal server error' });
   }
 });
 
@@ -161,21 +161,53 @@ const updateProfileSchema = z.object({
   licenseNo: z.string().optional(),
   hospital: z.string().optional(),
   avatar: z.string().optional(),
+  currentPassword: z.string().optional(),
+  newPassword: z.string().min(6).optional(),
 });
 
 router.put('/profile', requireAuth, async (req: AuthRequest, res: Response) => {
   try {
     const updateData = updateProfileSchema.parse(req.body);
-    
+
+    // Handle password change
+    if (updateData.currentPassword && updateData.newPassword) {
+      const userResult = await db.collection('users').doc(req.user!.id).get();
+      const user = userResult.data[0];
+      const dbPassword = String(user.password);
+
+      let passwordMatch = false;
+      if (dbPassword.startsWith('$2b$')) {
+        passwordMatch = await bcrypt.compare(updateData.currentPassword, dbPassword);
+      } else {
+        passwordMatch = updateData.currentPassword === dbPassword;
+      }
+
+      if (!passwordMatch) {
+        return res.status(400).json({ error: '当前密码不正确' });
+      }
+
+      const hashedPassword = await bcrypt.hash(updateData.newPassword, 10);
+      await db.collection('users').doc(req.user!.id).update({
+        password: hashedPassword,
+        updatedAt: new Date(),
+      });
+      logger.info(`Password changed for user ${req.user!.username}`);
+      return res.json({ success: true });
+    }
+
+    // Remove password fields from profile update
+    delete updateData.currentPassword;
+    delete updateData.newPassword;
+
     // Also update the org string if hospital or department changes
     let orgUpdate = {};
     if (updateData.hospital || updateData.department) {
       const userResult = await db.collection('users').doc(req.user!.id).get();
       const user = userResult.data[0];
-      
+
       const currentHospital = updateData.hospital || user.hospital || (user.org ? user.org.split(' ')[0] : '');
       const currentDept = updateData.department || user.department || (user.org ? user.org.split(' ')[1] : '');
-      
+
       orgUpdate = {
         org: `${currentHospital} ${currentDept}`.trim()
       };
@@ -184,17 +216,16 @@ router.put('/profile', requireAuth, async (req: AuthRequest, res: Response) => {
     await db.collection('users').doc(req.user!.id).update({
       ...updateData,
       ...orgUpdate,
-      // If nickName is updated, also update name for backward compatibility
       ...(updateData.nickName ? { name: updateData.nickName } : {}),
       updatedAt: new Date()
     });
-    res.json({ success: true });
-    } catch (error: any) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: (error as any).errors[0].message });
-      }
+    return res.json({ success: true });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({ error: error.errors[0].message });
+    }
     logger.error({ error }, 'Update profile error');
-    res.status(500).json({ error: 'Internal server error' });
+    return res.status(500).json({ error: 'Internal server error' });
   }
 });
 

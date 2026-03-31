@@ -72,8 +72,9 @@ const Settings: React.FC = () => {
     smsCritical: true,
   });
 
-  const [clinical, setClinical] = useState({
-    defaultTarget: '360',
+  const [clinical, setClinical] = useState(() => {
+    const saved = localStorage.getItem('clinical_prefs');
+    return saved ? JSON.parse(saved) : { defaultTarget: '360' };
   });
 
   const tabs = [
@@ -130,7 +131,7 @@ const Settings: React.FC = () => {
                  <img src={profile.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile.nickName || '医生')}&background=0D8ABC&color=fff&size=128`} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div>
-                <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-50 transition-colors">
+                <button className="px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-medium text-slate-400 cursor-not-allowed" disabled title="头像上传功能开发中">
                   更换头像
                 </button>
                 <p className="text-xs text-slate-400 mt-2">支持 JPG, PNG 格式，最大 2MB</p>
@@ -216,7 +217,13 @@ const Settings: React.FC = () => {
             </div>
             
             <div className="pt-4 flex justify-end">
-              <button className="flex items-center px-6 py-2.5 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-sm">
+              <button
+                onClick={() => {
+                  localStorage.setItem('clinical_prefs', JSON.stringify(clinical));
+                  showFeedback('success', '诊疗偏好已保存');
+                }}
+                className="flex items-center px-6 py-2.5 bg-primary-600 text-white rounded-xl font-bold hover:bg-primary-700 transition-colors shadow-sm"
+              >
                 <Save size={18} className="mr-2" />
                 应用设置
               </button>
@@ -322,13 +329,10 @@ const Settings: React.FC = () => {
                <h3 className="font-bold text-slate-800 mb-4">登录历史</h3>
                <div className="text-sm text-slate-600 space-y-3">
                  <div className="flex justify-between items-center pb-2 border-b border-slate-50">
-                   <span>Windows 10 · Chrome</span>
-                   <span className="text-slate-400">2024-03-24 08:30 (当前)</span>
+                   <span>当前会话</span>
+                   <span className="text-slate-400">{new Date().toLocaleDateString('zh-CN')} (当前)</span>
                  </div>
-                 <div className="flex justify-between items-center pb-2 border-b border-slate-50">
-                   <span>iPhone 14 · App</span>
-                   <span className="text-slate-400">2024-03-23 19:12</span>
-                 </div>
+                 <p className="text-slate-400 text-xs mt-2">仅显示当前登录会话，历史记录功能开发中</p>
                </div>
              </div>
           </div>

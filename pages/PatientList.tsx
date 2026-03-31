@@ -7,6 +7,7 @@ const PatientList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showQRCode, setShowQRCode] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [doctorInfo, setDoctorInfo] = useState({ nickName: '医生', title: '', hospital: '', avatar: '' });
   const [patients, setPatients] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [offset, setOffset] = useState(0);
@@ -61,6 +62,19 @@ const PatientList: React.FC = () => {
     }
   };
 
+  useEffect(() => {
+    if (showQRCode) {
+      api.getMe().then(data => {
+        setDoctorInfo({
+          nickName: data.nickName || '医生',
+          title: data.title || '',
+          hospital: data.hospital || '',
+          avatar: data.avatar || '',
+        });
+      }).catch(() => {});
+    }
+  }, [showQRCode]);
+
   const handleCopy = () => {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
@@ -86,7 +100,7 @@ const PatientList: React.FC = () => {
           />
         </div>
         <div className="flex gap-2">
-          <button className="flex items-center px-4 py-2.5 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 font-medium">
+          <button className="flex items-center px-4 py-2.5 bg-white border border-slate-200 text-slate-400 rounded-xl font-medium cursor-not-allowed" disabled title="筛选功能开发中">
             <Filter size={18} className="mr-2" />
             筛选
           </button>
@@ -232,16 +246,16 @@ const PatientList: React.FC = () => {
                {/* Doctor Info Section */}
                <div className="flex items-center gap-6 mb-10">
                  <div className="w-[88px] h-[88px] rounded-full bg-slate-100 shrink-0 overflow-hidden shadow-sm border border-slate-50">
-                    <img 
-                      src="https://ui-avatars.com/api/?name=Dr+Wang&background=0D8ABC&color=fff&size=200" 
-                      className="w-full h-full object-cover" 
-                      alt="Avatar" 
+                    <img
+                      src={doctorInfo.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(doctorInfo.nickName)}&background=0D8ABC&color=fff&size=200`}
+                      className="w-full h-full object-cover"
+                      alt="Avatar"
                     />
                  </div>
                  <div className="space-y-1.5">
-                   <h4 className="text-xl text-slate-700 font-normal">王主任</h4>
-                   <p className="text-xs text-slate-500">副主任医师&nbsp;&nbsp;&nbsp;南方医科大学珠江医院</p>
-                   <p className="text-xs text-slate-500">南方医科大学珠江医院</p>
+                   <h4 className="text-xl text-slate-700 font-normal">{doctorInfo.nickName}</h4>
+                   {doctorInfo.title && <p className="text-xs text-slate-500">{doctorInfo.title}</p>}
+                   {doctorInfo.hospital && <p className="text-xs text-slate-500">{doctorInfo.hospital}</p>}
                  </div>
                </div>
                

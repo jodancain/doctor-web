@@ -65,13 +65,13 @@ const ProjectForm: React.FC = () => {
       {/* Breadcrumb / Header matching the image style */}
       <div className="px-6 py-4 border-b border-slate-100">
         <div className="flex items-center text-sm text-slate-500">
-          <span className="flex items-center hover:text-primary-600 cursor-pointer text-primary-600">
+          <span className="flex items-center text-primary-600">
             <Edit3 size={14} className="mr-1" /> 基本信息
           </span>
           <ChevronRight size={14} className="mx-2 text-slate-300" />
-          <span className="hover:text-primary-600 cursor-pointer">研究方案</span>
+          <span className="text-slate-400">研究方案</span>
           <ChevronRight size={14} className="mx-2 text-slate-300" />
-          <span className="hover:text-primary-600 cursor-pointer">CRF设计</span>
+          <span className="text-slate-400">CRF设计</span>
           <ChevronRight size={14} className="mx-2 text-slate-300" />
           <span className="font-bold text-slate-800">项目发布</span>
         </div>
