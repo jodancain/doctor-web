@@ -1,17 +1,26 @@
+async function handleResponse(res: Response, fallbackMsg: string) {
+  if (!res.ok) {
+    let errorMsg = fallbackMsg;
+    try {
+      const body = await res.json();
+      if (body.error) errorMsg = body.error;
+    } catch {
+      // Response was not valid JSON; use fallback message
+    }
+    throw new Error(errorMsg);
+  }
+  return res.json();
+}
+
 export const api = {
   async login(username: string, password: string) {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, password }),
-      // 使用 cookie 鉴权时需要显式携带 credentials
       credentials: 'include',
     });
-    if (!res.ok) {
-      const err = await res.json();
-      throw new Error(err.error || 'Login failed');
-    }
-    return res.json();
+    return handleResponse(res, 'Login failed');
   },
 
   async logout() {
@@ -20,8 +29,7 @@ export const api = {
 
   async getMe() {
     const res = await fetch('/api/auth/me', { credentials: 'include' });
-    if (!res.ok) throw new Error('Not authenticated');
-    return res.json();
+    return handleResponse(res, 'Not authenticated');
   },
 
   async updateProfile(data: any) {
@@ -31,8 +39,7 @@ export const api = {
       body: JSON.stringify(data),
       credentials: 'include',
     });
-    if (!res.ok) throw new Error('Failed to update profile');
-    return res.json();
+    return handleResponse(res, 'Failed to update profile');
   },
 
   async getPatients(params?: { limit?: number; offset?: number; q?: string }) {
@@ -42,14 +49,12 @@ export const api = {
     if (params?.q) searchParams.set('q', params.q);
 
     const res = await fetch(`/api/patients?${searchParams.toString()}`, { credentials: 'include' });
-    if (!res.ok) throw new Error('Failed to fetch patients');
-    return res.json();
+    return handleResponse(res, 'Failed to fetch patients');
   },
 
   async getPatient(patientOpenid: string) {
     const res = await fetch(`/api/patients/${patientOpenid}`, { credentials: 'include' });
-    if (!res.ok) throw new Error('Failed to fetch patient');
-    return res.json();
+    return handleResponse(res, 'Failed to fetch patient');
   },
 
   async createPatient(data: any) {
@@ -59,8 +64,7 @@ export const api = {
       body: JSON.stringify(data),
       credentials: 'include',
     });
-    if (!res.ok) throw new Error('Failed to create patient');
-    return res.json();
+    return handleResponse(res, 'Failed to create patient');
   },
 
   async updatePatient(patientOpenid: string, data: any) {
@@ -70,8 +74,7 @@ export const api = {
       body: JSON.stringify(data),
       credentials: 'include',
     });
-    if (!res.ok) throw new Error('Failed to update patient');
-    return res.json();
+    return handleResponse(res, 'Failed to update patient');
   },
 
   async deletePatient(patientOpenid: string) {
@@ -79,8 +82,7 @@ export const api = {
       method: 'DELETE',
       credentials: 'include',
     });
-    if (!res.ok) throw new Error('Failed to delete patient');
-    return res.json();
+    return handleResponse(res, 'Failed to delete patient');
   },
 
   async getPatientRecords(patientOpenid: string, type: string, params?: { limit?: number; offset?: number }) {
@@ -89,20 +91,17 @@ export const api = {
     if (params?.offset) searchParams.set('offset', params.offset.toString());
 
     const res = await fetch(`/api/patients/${patientOpenid}/records?${searchParams.toString()}`, { credentials: 'include' });
-    if (!res.ok) throw new Error('Failed to fetch patient records');
-    return res.json();
+    return handleResponse(res, 'Failed to fetch patient records');
   },
 
   async getPatientSummary(patientOpenid: string) {
     const res = await fetch(`/api/patients/${patientOpenid}/summary`, { credentials: 'include' });
-    if (!res.ok) throw new Error('Failed to fetch patient summary');
-    return res.json();
+    return handleResponse(res, 'Failed to fetch patient summary');
   },
 
   async getDashboardStats() {
     const res = await fetch('/api/patients/dashboard/stats', { credentials: 'include' });
-    if (!res.ok) throw new Error('Failed to fetch dashboard stats');
-    return res.json();
+    return handleResponse(res, 'Failed to fetch dashboard stats');
   },
 
   // Education Articles (Hospital Knowledge Base)
@@ -114,14 +113,12 @@ export const api = {
     if (params?.q) searchParams.set('q', params.q);
 
     const res = await fetch(`/api/education?${searchParams.toString()}`, { credentials: 'include' });
-    if (!res.ok) throw new Error('Failed to fetch education articles');
-    return res.json();
+    return handleResponse(res, 'Failed to fetch education articles');
   },
 
   async getEducationArticle(id: string) {
     const res = await fetch(`/api/education/${id}`, { credentials: 'include' });
-    if (!res.ok) throw new Error('Failed to fetch article');
-    return res.json();
+    return handleResponse(res, 'Failed to fetch article');
   },
 
   async createEducationArticle(data: any) {
@@ -131,8 +128,7 @@ export const api = {
       body: JSON.stringify(data),
       credentials: 'include',
     });
-    if (!res.ok) throw new Error('Failed to create article');
-    return res.json();
+    return handleResponse(res, 'Failed to create article');
   },
 
   async updateEducationArticle(id: string, data: any) {
@@ -142,8 +138,7 @@ export const api = {
       body: JSON.stringify(data),
       credentials: 'include',
     });
-    if (!res.ok) throw new Error('Failed to update article');
-    return res.json();
+    return handleResponse(res, 'Failed to update article');
   },
 
   async deleteEducationArticle(id: string) {
@@ -151,7 +146,6 @@ export const api = {
       method: 'DELETE',
       credentials: 'include',
     });
-    if (!res.ok) throw new Error('Failed to delete article');
-    return res.json();
+    return handleResponse(res, 'Failed to delete article');
   }
 };

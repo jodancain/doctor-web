@@ -11,6 +11,12 @@ export default function ArticleEditor() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(!!id);
   const [saving, setSaving] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'error' | 'success'; text: string } | null>(null);
+
+  const showFeedback = (type: 'error' | 'success', text: string) => {
+    setFeedback({ type, text });
+    setTimeout(() => setFeedback(null), 4000);
+  };
 
   const [formData, setFormData] = useState({
     title: '',
@@ -35,19 +41,19 @@ export default function ArticleEditor() {
         setLoading(false);
       }).catch(err => {
         console.error(err);
-        alert('获取文章失败');
-        navigate('/system/education');
+        showFeedback('error', '获取文章失败');
+        setTimeout(() => navigate('/system/education'), 2000);
       });
     }
   }, [id, navigate]);
 
   const handleSave = async (statusOverride?: '已发布' | '草稿') => {
     if (!formData.title) {
-      alert('请输入文章标题');
+      showFeedback('error', '请输入文章标题');
       return;
     }
     if (!formData.content) {
-      alert('请输入文章内容');
+      showFeedback('error', '请输入文章内容');
       return;
     }
 
@@ -66,7 +72,7 @@ export default function ArticleEditor() {
       navigate('/system/education');
     } catch (error) {
       console.error(error);
-      alert('保存失败');
+      showFeedback('error', '保存失败，请重试');
     } finally {
       setSaving(false);
     }
@@ -76,6 +82,13 @@ export default function ArticleEditor() {
 
   return (
     <div className="flex flex-col min-h-[calc(100vh-100px)] bg-[#f8f9fa] -m-8 px-4 sm:px-8 py-6 relative">
+      {feedback && (
+        <div className={`fixed top-4 right-4 z-[60] px-4 py-3 rounded-xl shadow-lg text-sm font-medium ${
+          feedback.type === 'error' ? 'bg-red-50 text-red-700 border border-red-200' : 'bg-green-50 text-green-700 border border-green-200'
+        }`}>
+          {feedback.text}
+        </div>
+      )}
       {/* 顶部工具栏 - 固定在顶部 */}
       <div className="sticky top-0 z-50 bg-[#f8f9fa]/80 backdrop-blur-xl pb-4 pt-4 -mt-6 flex items-center justify-between border-b border-slate-200/50 shadow-[0_4px_20px_-10px_rgba(0,0,0,0.05)]">
         <div className="flex items-center gap-3">

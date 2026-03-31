@@ -2,7 +2,7 @@ import cloudbase from "@cloudbase/node-sdk";
 import { logger } from "./logger";
 
 if (!process.env.CLOUDBASE_ENV_ID || !process.env.CLOUDBASE_SECRET_ID || !process.env.CLOUDBASE_SECRET_KEY) {
-  logger.error("Missing CloudBase credentials in environment variables.");
+  throw new Error("Missing CloudBase credentials: CLOUDBASE_ENV_ID, CLOUDBASE_SECRET_ID, and CLOUDBASE_SECRET_KEY must be set in environment variables.");
 }
 
 const app = cloudbase.init({
