@@ -100,7 +100,27 @@
 - [ ] 职称管理 — 纯 mock UI
 - [ ] 资源管理 — 纯 mock UI
 
-## 十五、后端
+## 十五、患者端小程序 API (patient-api.ts)
+- [x] 患者登录 → auth.ts 允许 role='user' 登录
+- [x] 获取个人资料 → GET /api/patient/me
+- [x] 提交健康记录 → POST /api/patient/records/:type (6 种)
+- [x] 查询自己的记录 → GET /api/patient/records/:type
+- [x] 获取 7 天摘要 → GET /api/patient/summary
+- [x] 查看待办任务 → GET /api/patient/tasks
+- [x] 获取问卷模板 → GET /api/patient/questionnaires/:id
+- [x] 提交问卷答卷 → POST /api/patient/questionnaires/:id/submit
+- [x] 获取聊天消息 → GET /api/patient/messages
+- [x] 发送消息给医生 → POST /api/patient/messages
+- [x] 标记已读 → PUT /api/patient/messages/read
+- [x] 获取宣教文章 → GET /api/patient/articles (只读)
+- [x] 查看文章详情 → GET /api/patient/articles/:id (自动计浏览量)
+
+## 十六、安全修复
+- [x] education.ts: POST/PUT/DELETE 添加 requireDoctor 保护
+- [x] auth.ts: JWT payload 包含 _openid 字段
+- [x] patient-api.ts: 所有查询/写入以 _openid 作用域限制
+
+## 十七、后端基础修复
 - [x] auth.ts: login/profile catch 块 return 语句 → 已修复
 - [x] auth.ts: 密码修改接口 → 已实现（验证旧密码 + bcrypt 加密）
 - [x] PatientList QR 弹窗 → 医生信息改为动态加载

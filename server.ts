@@ -9,6 +9,7 @@ import patientRoutes from './server/routes/patients';
 import educationRoutes from './server/routes/education';
 import questionnaireRoutes from './server/routes/questionnaires';
 import messageRoutes from './server/routes/messages';
+import patientApiRoutes from './server/routes/patient-api';
 import path from 'path';
 
 async function startServer() {
@@ -25,6 +26,7 @@ async function startServer() {
   app.use('/api/education', educationRoutes);
   app.use('/api/questionnaires', questionnaireRoutes);
   app.use('/api/messages', messageRoutes);
+  app.use('/api/patient', patientApiRoutes);
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {

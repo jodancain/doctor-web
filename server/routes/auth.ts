@@ -31,8 +31,8 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    if (user.role !== 'doctor') {
-      return res.status(403).json({ error: 'Access denied: Only doctors can login to this portal' });
+    if (user.role !== 'doctor' && user.role !== 'user') {
+      return res.status(403).json({ error: 'Access denied: Invalid user role' });
     }
 
     // Password verification
@@ -70,6 +70,7 @@ router.post('/login', async (req, res) => {
       username: user.username,
       nickName: user.nickName,
       role: user.role,
+      _openid: user._openid || undefined,
     };
 
     const token = jwt.sign(payload, process.env.JWT_SECRET as string, { expiresIn: '1d' });

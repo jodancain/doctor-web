@@ -250,4 +250,96 @@ export const api = {
     const res = await fetch('/api/messages/unread-count', { credentials: 'include' });
     return handleResponse(res, 'Failed to fetch unread count');
   },
+
+  // ─── Patient API (for mini-program) ─────────────────────────
+
+  async getPatientProfile() {
+    const res = await fetch('/api/patient/me', { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch patient profile');
+  },
+
+  async submitHealthRecord(type: string, data: any) {
+    const res = await fetch(`/api/patient/records/${type}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
+    return handleResponse(res, 'Failed to submit health record');
+  },
+
+  async getMyRecords(type: string, params?: { limit?: number; offset?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
+    if (params?.offset !== undefined) searchParams.set('offset', params.offset.toString());
+
+    const res = await fetch(`/api/patient/records/${type}?${searchParams.toString()}`, { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch records');
+  },
+
+  async getMySummary() {
+    const res = await fetch('/api/patient/summary', { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch summary');
+  },
+
+  async getMyTasks() {
+    const res = await fetch('/api/patient/tasks', { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch tasks');
+  },
+
+  async getQuestionnaireForFill(id: string) {
+    const res = await fetch(`/api/patient/questionnaires/${id}`, { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch questionnaire');
+  },
+
+  async submitQuestionnaireAnswers(id: string, data: { answers: any[]; score?: number; result?: string }) {
+    const res = await fetch(`/api/patient/questionnaires/${id}/submit`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
+    return handleResponse(res, 'Failed to submit questionnaire');
+  },
+
+  async getMyMessages(params?: { limit?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
+
+    const res = await fetch(`/api/patient/messages?${searchParams.toString()}`, { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch messages');
+  },
+
+  async sendPatientMessage(content: string) {
+    const res = await fetch('/api/patient/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content }),
+      credentials: 'include',
+    });
+    return handleResponse(res, 'Failed to send message');
+  },
+
+  async markMyMessagesRead() {
+    const res = await fetch('/api/patient/messages/read', {
+      method: 'PUT',
+      credentials: 'include',
+    });
+    return handleResponse(res, 'Failed to mark messages as read');
+  },
+
+  async getPublishedArticles(params?: { limit?: number; offset?: number; category?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.limit !== undefined) searchParams.set('limit', params.limit.toString());
+    if (params?.offset !== undefined) searchParams.set('offset', params.offset.toString());
+    if (params?.category) searchParams.set('category', params.category);
+
+    const res = await fetch(`/api/patient/articles?${searchParams.toString()}`, { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch articles');
+  },
+
+  async getPublishedArticle(id: string) {
+    const res = await fetch(`/api/patient/articles/${id}`, { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch article');
+  },
 };

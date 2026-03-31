@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { db, _ } from '../db';
 import { logger } from '../logger';
-import { requireAuth, AuthRequest } from '../middleware/auth';
+import { requireAuth, requireDoctor, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
@@ -83,8 +83,8 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// POST /api/education
-router.post('/', async (req: AuthRequest, res: Response) => {
+// POST /api/education (doctor only)
+router.post('/', requireDoctor, async (req: AuthRequest, res: Response) => {
   try {
     const article = req.body;
     
@@ -104,8 +104,8 @@ router.post('/', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// PUT /api/education/:id
-router.put('/:id', async (req: AuthRequest, res: Response) => {
+// PUT /api/education/:id (doctor only)
+router.put('/:id', requireDoctor, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const updates = req.body;
@@ -131,8 +131,8 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// DELETE /api/education/:id
-router.delete('/:id', async (req: AuthRequest, res: Response) => {
+// DELETE /api/education/:id (doctor only)
+router.delete('/:id', requireDoctor, async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
     const result = await db.collection(COLLECTION_NAME).doc(id).remove();
