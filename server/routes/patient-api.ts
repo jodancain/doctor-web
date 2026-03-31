@@ -155,7 +155,7 @@ router.post('/questionnaires/:id/submit', async (req: AuthRequest, res: Response
       data: {
         questionnaireId: id,
         questionnaireName: questionnaire.title,
-        patientId: req.user!._openid || req.user!.id,
+        patientId: req.user!.id,
         patientName: req.user!.nickName || '',
         submitDate: new Date().toISOString().replace('T', ' ').substring(0, 16),
         score: score || null,

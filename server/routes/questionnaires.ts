@@ -157,25 +157,16 @@ router.post('/:id/distribute', async (req: AuthRequest, res: Response) => {
     const questionnaire = await prisma.questionnaire.findUnique({ where: { id } });
     if (!questionnaire) return res.status(404).json({ error: 'Questionnaire not found' });
 
-    // Look up patient user IDs from openids
-    const patientUsers = await prisma.user.findMany({
-      where: { openid: { in: patientIds.map((p: any) => p.id) } },
-      select: { id: true, openid: true, nickName: true },
-    });
-
-    const tasks = patientIds.map((p: { id: string; name: string }) => {
-      const patientUser = patientUsers.find(u => u.openid === p.id);
-      return {
-        patientId: patientUser?.id || p.id,
-        patientName: p.name,
-        taskType: 'questionnaire',
-        referenceId: id,
-        title: questionnaire.title,
-        status: 'pending',
-        doctorId: req.user!.id,
-        doctorName: req.user!.nickName,
-      };
-    });
+    const tasks = patientIds.map((p: { id: string; name: string }) => ({
+      patientId: p.id,
+      patientName: p.name,
+      taskType: 'questionnaire',
+      referenceId: id,
+      title: questionnaire.title,
+      status: 'pending',
+      doctorId: req.user!.id,
+      doctorName: req.user!.nickName,
+    }));
 
     await Promise.all(tasks.map((task: any) => prisma.patientTask.create({ data: task })));
 

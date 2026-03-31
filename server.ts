@@ -1,4 +1,8 @@
 import 'dotenv/config';
+
+// BigInt JSON serialization support (Prisma returns BigInt for large integer fields)
+(BigInt.prototype as any).toJSON = function () { return Number(this); };
+
 import express from 'express';
 import { createServer as createViteServer } from 'vite';
 import cookieParser from 'cookie-parser';

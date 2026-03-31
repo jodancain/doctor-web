@@ -139,7 +139,7 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 
     const patient = await prisma.user.create({
       data: {
-        username: openid,
+        username: `patient_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
         password: '',
         nickName: data.nickName,
         name: data.nickName,

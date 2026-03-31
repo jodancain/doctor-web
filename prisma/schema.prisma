@@ -35,10 +35,6 @@ model User {
 
   educationArticles  EducationArticle[]
   questionnaires     Questionnaire[]
-  sentMessages       Message[]       @relation("SentMessages")
-  receivedMessages   Message[]       @relation("ReceivedMessages")
-  patientTasksAsPatient PatientTask[] @relation("TaskPatient")
-  patientTasksAsDoctor  PatientTask[] @relation("TaskDoctor")
 
   @@index([role])
   @@map("users")
@@ -169,7 +165,6 @@ model Questionnaire {
   updatedAt     DateTime @updatedAt
 
   records       QuestionnaireRecord[]
-  tasks         PatientTask[]
 
   @@index([status])
   @@index([updatedAt])
@@ -199,15 +194,12 @@ model QuestionnaireRecord {
 model PatientTask {
   id          String   @id @default(uuid())
   patientId   String
-  patient     User     @relation("TaskPatient", fields: [patientId], references: [id])
   patientName String?
   taskType    String   @default("questionnaire")
   referenceId String
-  questionnaire Questionnaire @relation(fields: [referenceId], references: [id])
   title       String?
   status      String   @default("pending")
   doctorId    String?
-  doctor      User?    @relation("TaskDoctor", fields: [doctorId], references: [id])
   doctorName  String?
   createdAt   DateTime @default(now())
   completedAt DateTime?
@@ -218,17 +210,15 @@ model PatientTask {
   @@map("patient_tasks")
 }
 
-// ─── 消息 ───────────────────────────────────────────────────────
+// ─── 消息（senderId/receiverId 可能是 User.id 或 openid） ───────
 
 model Message {
   id             String  @id @default(uuid())
   conversationId String
   senderId       String
-  sender         User    @relation("SentMessages", fields: [senderId], references: [id])
   senderRole     String
   senderName     String?
   receiverId     String
-  receiver       User    @relation("ReceivedMessages", fields: [receiverId], references: [id])
   receiverName   String?
   content        String  @db.LongText
   type           String  @default("text")
