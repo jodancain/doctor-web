@@ -147,5 +147,107 @@ export const api = {
       credentials: 'include',
     });
     return handleResponse(res, 'Failed to delete article');
-  }
+  },
+
+  // Questionnaires
+  async getQuestionnaires(params?: { limit?: number; offset?: number; q?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    if (params?.q) searchParams.set('q', params.q);
+
+    const res = await fetch(`/api/questionnaires?${searchParams.toString()}`, { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch questionnaires');
+  },
+
+  async getQuestionnaire(id: string) {
+    const res = await fetch(`/api/questionnaires/${id}`, { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch questionnaire');
+  },
+
+  async createQuestionnaire(data: any) {
+    const res = await fetch('/api/questionnaires', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
+    return handleResponse(res, 'Failed to create questionnaire');
+  },
+
+  async updateQuestionnaire(id: string, data: any) {
+    const res = await fetch(`/api/questionnaires/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+      credentials: 'include',
+    });
+    return handleResponse(res, 'Failed to update questionnaire');
+  },
+
+  async deleteQuestionnaire(id: string) {
+    const res = await fetch(`/api/questionnaires/${id}`, {
+      method: 'DELETE',
+      credentials: 'include',
+    });
+    return handleResponse(res, 'Failed to delete questionnaire');
+  },
+
+  async distributeQuestionnaire(id: string, patientIds: { id: string; name: string }[]) {
+    const res = await fetch(`/api/questionnaires/${id}/distribute`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ patientIds }),
+      credentials: 'include',
+    });
+    return handleResponse(res, 'Failed to distribute questionnaire');
+  },
+
+  async getQuestionnaireRecords(params?: { limit?: number; offset?: number; q?: string }) {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.offset) searchParams.set('offset', params.offset.toString());
+    if (params?.q) searchParams.set('q', params.q);
+
+    const res = await fetch(`/api/questionnaires/records/list?${searchParams.toString()}`, { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch questionnaire records');
+  },
+
+  // Chat Messages
+  async getConversations() {
+    const res = await fetch('/api/messages/conversations', { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch conversations');
+  },
+
+  async getMessages(patientOpenid: string, params?: { limit?: number; before?: number }) {
+    const searchParams = new URLSearchParams();
+    if (params?.limit) searchParams.set('limit', params.limit.toString());
+    if (params?.before) searchParams.set('before', params.before.toString());
+
+    const res = await fetch(`/api/messages/${patientOpenid}?${searchParams.toString()}`, { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch messages');
+  },
+
+  async sendMessage(patientOpenid: string, content: string, patientName?: string) {
+    const res = await fetch(`/api/messages/${patientOpenid}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ content, patientName }),
+      credentials: 'include',
+    });
+    return handleResponse(res, 'Failed to send message');
+  },
+
+  async markMessagesRead(patientOpenid: string) {
+    const res = await fetch(`/api/messages/${patientOpenid}/read`, {
+      method: 'PUT',
+      credentials: 'include',
+    });
+    return handleResponse(res, 'Failed to mark messages as read');
+  },
+
+  async getUnreadCount() {
+    const res = await fetch('/api/messages/unread-count', { credentials: 'include' });
+    return handleResponse(res, 'Failed to fetch unread count');
+  },
 };

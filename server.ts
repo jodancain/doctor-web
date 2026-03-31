@@ -7,6 +7,8 @@ import { logger } from './server/logger';
 import authRoutes from './server/routes/auth';
 import patientRoutes from './server/routes/patients';
 import educationRoutes from './server/routes/education';
+import questionnaireRoutes from './server/routes/questionnaires';
+import messageRoutes from './server/routes/messages';
 import path from 'path';
 
 async function startServer() {
@@ -21,6 +23,8 @@ async function startServer() {
   app.use('/api/auth', authRoutes);
   app.use('/api/patients', patientRoutes);
   app.use('/api/education', educationRoutes);
+  app.use('/api/questionnaires', questionnaireRoutes);
+  app.use('/api/messages', messageRoutes);
 
   // Vite middleware for development
   if (process.env.NODE_ENV !== 'production') {

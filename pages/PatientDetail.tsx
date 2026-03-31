@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine } from 'recharts';
-import { ArrowLeft, FileText, Activity, AlertCircle, Droplets, Dumbbell, Pill, Apple } from 'lucide-react';
+import { ArrowLeft, FileText, Activity, AlertCircle, Droplets, Dumbbell, Pill, Apple, MessageSquare } from 'lucide-react';
 import { api } from '../api';
 
 const PatientDetail: React.FC = () => {
@@ -112,7 +112,7 @@ const PatientDetail: React.FC = () => {
             </p>
           </div>
         </div>
-        <div className="flex gap-4 text-sm">
+        <div className="flex gap-4 text-sm items-start">
           <div className="bg-slate-50 p-3 rounded-xl border border-slate-100">
             <span className="text-slate-400 block mb-1">主要诊断</span>
             <span className="font-medium text-slate-800">{patient.diagnosis || '痛风'}</span>
@@ -121,6 +121,13 @@ const PatientDetail: React.FC = () => {
             <span className="text-slate-400 block mb-1">当前用药</span>
             <span className="font-medium text-slate-800 truncate block" title={patient.medication || '暂无记录'}>{patient.medication || '暂无记录'}</span>
           </div>
+          <button
+            onClick={() => navigate(`/chat/${id}`)}
+            className="flex items-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-xl hover:bg-primary-700 transition-colors font-medium shadow-sm text-sm"
+          >
+            <MessageSquare size={16} />
+            发消息
+          </button>
         </div>
       </div>
 

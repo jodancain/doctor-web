@@ -100,3 +100,25 @@ export interface PatientTask {
   createdAt: string;
   completedAt?: string;
 }
+
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  senderId: string;
+  senderRole: 'doctor' | 'patient';
+  senderName: string;
+  content: string;
+  type: 'text' | 'image';
+  createdAt: number;
+  read: boolean;
+}
+
+export interface Conversation {
+  id: string;
+  patientId: string;
+  patientName: string;
+  patientAvatar?: string;
+  lastMessage: string;
+  lastMessageTime: number;
+  unreadCount: number;
+}

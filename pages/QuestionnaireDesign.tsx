@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Search, Edit2, Copy, Trash2, FileText, CheckCircle2, Clock, X, ArrowLeft, GripVertical, Share2, Download, Send, QrCode } from 'lucide-react';
-import { MOCK_QUESTIONNAIRES } from '../constants';
-import { Questionnaire, Question, Patient } from '../types';
+import { Questionnaire, Question } from '../types';
 import { api } from '../api';
 
 type ViewMode = 'list' | 'edit';
 
 const QuestionnaireDesign: React.FC = () => {
-  const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>(MOCK_QUESTIONNAIRES);
+  const [questionnaires, setQuestionnaires] = useState<Questionnaire[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState<ViewMode>('list');
   const [editingData, setEditingData] = useState<Questionnaire | null>(null);
@@ -26,9 +26,24 @@ const QuestionnaireDesign: React.FC = () => {
     setTimeout(() => setFeedbackMsg(null), 4000);
   };
 
-  const filteredQuestionnaires = questionnaires.filter(q => 
-    q.title.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchQuestionnaires = async () => {
+    try {
+      setLoading(true);
+      const res = await api.getQuestionnaires({ q: searchTerm || undefined });
+      setQuestionnaires(res.items || []);
+    } catch (err) {
+      console.error('Failed to fetch questionnaires:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(() => fetchQuestionnaires(), 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const filteredQuestionnaires = questionnaires;
 
   const handleOpenEditor = (questionnaire?: Questionnaire) => {
     if (questionnaire) {
@@ -49,50 +64,68 @@ const QuestionnaireDesign: React.FC = () => {
     setViewMode('edit');
   };
 
-  const handleSaveQuestionnaire = () => {
+  const handleSaveQuestionnaire = async () => {
     if (!editingData) return;
     if (!editingData.title.trim()) {
       showFeedback('error', '请输入问卷标题');
       return;
     }
 
-    const today = new Date().toISOString().split('T')[0];
-    const updatedData: Questionnaire = {
-      ...editingData,
-      questionCount: editingData.questions?.length || 0,
-      updateDate: today
-    };
+    try {
+      const payload = {
+        title: editingData.title,
+        type: editingData.type,
+        status: editingData.status,
+        questions: editingData.questions || [],
+      };
 
-    const exists = questionnaires.find(q => q.id === updatedData.id);
-    if (exists) {
-      setQuestionnaires(questionnaires.map(q => q.id === updatedData.id ? updatedData : q));
-    } else {
-      setQuestionnaires([updatedData, ...questionnaires]);
+      const isNew = editingData.id.startsWith('Q') && editingData.id.length < 20;
+      if (isNew) {
+        await api.createQuestionnaire(payload);
+      } else {
+        await api.updateQuestionnaire(editingData.id, payload);
+      }
+
+      setViewMode('list');
+      setEditingData(null);
+      fetchQuestionnaires();
+      showFeedback('success', '问卷已保存');
+    } catch (err) {
+      console.error('Failed to save questionnaire:', err);
+      showFeedback('error', '保存失败，请重试');
     }
-    setViewMode('list');
-    setEditingData(null);
   };
 
   const handleDelete = (id: string) => {
     setQuestionnaireToDelete(id);
   };
 
-  const confirmDeleteQuestionnaire = () => {
+  const confirmDeleteQuestionnaire = async () => {
     if (!questionnaireToDelete) return;
-    setQuestionnaires(questionnaires.filter(q => q.id !== questionnaireToDelete));
-    setQuestionnaireToDelete(null);
+    try {
+      await api.deleteQuestionnaire(questionnaireToDelete);
+      setQuestionnaireToDelete(null);
+      fetchQuestionnaires();
+    } catch (err) {
+      console.error('Failed to delete questionnaire:', err);
+      showFeedback('error', '删除失败，请重试');
+    }
   };
 
-  const handleCopy = (questionnaire: Questionnaire) => {
-    const today = new Date().toISOString().split('T')[0];
-    const newQuestionnaire: Questionnaire = JSON.parse(JSON.stringify(questionnaire));
-    newQuestionnaire.id = `Q${Date.now()}`;
-    newQuestionnaire.title = `${questionnaire.title} (副本)`;
-    newQuestionnaire.status = 'Draft';
-    newQuestionnaire.updateDate = today;
-    newQuestionnaire.usageCount = 0;
-    
-    setQuestionnaires([newQuestionnaire, ...questionnaires]);
+  const handleCopy = async (questionnaire: Questionnaire) => {
+    try {
+      await api.createQuestionnaire({
+        title: `${questionnaire.title} (副本)`,
+        type: questionnaire.type,
+        status: 'Draft',
+        questions: questionnaire.questions || [],
+      });
+      fetchQuestionnaires();
+      showFeedback('success', '问卷已复制');
+    } catch (err) {
+      console.error('Failed to copy questionnaire:', err);
+      showFeedback('error', '复制失败');
+    }
   };
 
   // --- Distribution Functions ---
@@ -109,13 +142,17 @@ const QuestionnaireDesign: React.FC = () => {
   };
 
   const handleSendTasks = async () => {
-    if (selectedPatientIds.length === 0) return;
+    if (selectedPatientIds.length === 0 || !distributeModal.questionnaire) return;
     setIsSending(true);
     try {
-      // Mocking the API call for sending tasks
-      await new Promise(resolve => setTimeout(resolve, 800));
+      const patientData = selectedPatientIds.map(pid => {
+        const p = patients.find(pt => (pt._openid || pt.id) === pid);
+        return { id: pid, name: p?.nickName || p?.name || '患者' };
+      });
+      await api.distributeQuestionnaire(distributeModal.questionnaire.id, patientData);
       setDistributeModal({ isOpen: false, questionnaire: null });
       showFeedback('success', `已成功向 ${selectedPatientIds.length} 位患者下发问卷`);
+      fetchQuestionnaires();
     } catch (err) {
       console.error(err);
       showFeedback('error', '下发失败，请重试');
