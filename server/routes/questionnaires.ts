@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { db, _ } from '../db';
+import { prisma } from '../db';
 import { logger } from '../logger';
 import { requireAuth, requireDoctor, AuthRequest } from '../middleware/auth';
 
@@ -14,68 +14,58 @@ router.get('/', async (req: AuthRequest, res: Response) => {
     const offset = parseInt(req.query.offset as string) || 0;
     const q = req.query.q as string;
 
-    let query: any = {};
-    if (q) {
-      const searchRegex = db.RegExp({ regexp: q, options: 'i' });
-      query = { title: searchRegex };
-    }
+    const where: any = {};
+    if (q) where.title = { contains: q };
 
-    const [countResult, dataResult] = await Promise.all([
-      db.collection('questionnaires').where(query).count(),
-      db.collection('questionnaires')
-        .where(query)
-        .skip(offset)
-        .limit(limit)
-        .orderBy('updatedAt', 'desc')
-        .get()
+    const [total, data] = await Promise.all([
+      prisma.questionnaire.count({ where }),
+      prisma.questionnaire.findMany({
+        where,
+        skip: offset,
+        take: limit,
+        orderBy: { updatedAt: 'desc' },
+      }),
     ]);
 
-    const items = dataResult.data.map((item: any) => ({
+    const items = data.map(item => ({
       ...item,
-      id: item._id,
-      updateDate: new Date(item.updatedAt?.$date || item.updatedAt || Date.now()).toISOString().split('T')[0],
+      updateDate: item.updatedAt.toISOString().split('T')[0],
     }));
 
-    res.json({ items, total: countResult.total, limit, offset });
+    res.json({ items, total, limit, offset });
   } catch (error) {
     logger.error({ error }, 'Error fetching questionnaires');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// GET /api/questionnaires/records/list — must be before /:id to avoid route conflict
+// GET /api/questionnaires/records/list — must be before /:id
 router.get('/records/list', async (req: AuthRequest, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = parseInt(req.query.offset as string) || 0;
     const q = req.query.q as string;
 
-    let query: any = {};
+    const where: any = {};
     if (q) {
-      const searchRegex = db.RegExp({ regexp: q, options: 'i' });
-      query = _.or([
-        { questionnaireName: searchRegex },
-        { patientName: searchRegex },
-        { patientId: searchRegex },
-      ]);
+      where.OR = [
+        { questionnaireName: { contains: q } },
+        { patientName: { contains: q } },
+        { patientId: { contains: q } },
+      ];
     }
 
-    const [countResult, dataResult] = await Promise.all([
-      db.collection('questionnaire_records').where(query).count(),
-      db.collection('questionnaire_records')
-        .where(query)
-        .skip(offset)
-        .limit(limit)
-        .orderBy('submitDate', 'desc')
-        .get()
+    const [total, data] = await Promise.all([
+      prisma.questionnaireRecord.count({ where }),
+      prisma.questionnaireRecord.findMany({
+        where,
+        skip: offset,
+        take: limit,
+        orderBy: { submitDate: 'desc' },
+      }),
     ]);
 
-    const items = dataResult.data.map((item: any) => ({
-      ...item,
-      id: item._id,
-    }));
-
-    res.json({ items, total: countResult.total, limit, offset });
+    res.json({ items: data, total, limit, offset });
   } catch (error) {
     logger.error({ error }, 'Error fetching questionnaire records');
     res.status(500).json({ error: 'Internal server error' });
@@ -85,15 +75,9 @@ router.get('/records/list', async (req: AuthRequest, res: Response) => {
 // GET /api/questionnaires/:id
 router.get('/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const result = await db.collection('questionnaires').doc(id).get();
-
-    if (result.data.length === 0) {
-      return res.status(404).json({ error: 'Questionnaire not found' });
-    }
-
-    const item = result.data[0];
-    res.json({ ...item, id: item._id });
+    const item = await prisma.questionnaire.findUnique({ where: { id: req.params.id } });
+    if (!item) return res.status(404).json({ error: 'Questionnaire not found' });
+    res.json(item);
   } catch (error) {
     logger.error({ error }, 'Error fetching questionnaire');
     res.status(500).json({ error: 'Internal server error' });
@@ -103,22 +87,18 @@ router.get('/:id', async (req: AuthRequest, res: Response) => {
 // POST /api/questionnaires
 router.post('/', async (req: AuthRequest, res: Response) => {
   try {
-    const data = req.body;
-
-    const doc = {
-      title: data.title,
-      type: data.type || 'Survey',
-      status: data.status || 'Draft',
-      questions: data.questions || [],
-      questionCount: (data.questions || []).length,
-      usageCount: 0,
-      authorId: req.user?.id || 'system',
-      createdAt: db.serverDate(),
-      updatedAt: db.serverDate(),
-    };
-
-    const result = await db.collection('questionnaires').add(doc);
-    res.status(201).json({ success: true, id: result.id });
+    const { title, type, status, questions } = req.body;
+    const item = await prisma.questionnaire.create({
+      data: {
+        title,
+        type: type || 'Survey',
+        status: status || 'Draft',
+        questions: questions || [],
+        questionCount: (questions || []).length,
+        authorId: req.user!.id,
+      },
+    });
+    res.status(201).json({ success: true, id: item.id });
   } catch (error) {
     logger.error({ error }, 'Error creating questionnaire');
     res.status(500).json({ error: 'Internal server error' });
@@ -128,27 +108,20 @@ router.post('/', async (req: AuthRequest, res: Response) => {
 // PUT /api/questionnaires/:id
 router.put('/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const updates = req.body;
-
-    delete updates._id;
-    delete updates.id;
-    delete updates.createdAt;
-    delete updates.authorId;
-
-    if (updates.questions) {
-      updates.questionCount = updates.questions.length;
-    }
-    updates.updatedAt = db.serverDate();
-
-    const result = await db.collection('questionnaires').doc(id).update(updates);
-
-    if (result.updated === 0) {
-      return res.status(404).json({ error: 'Questionnaire not found' });
+    const { title, type, status, questions } = req.body;
+    const data: any = {};
+    if (title !== undefined) data.title = title;
+    if (type !== undefined) data.type = type;
+    if (status !== undefined) data.status = status;
+    if (questions !== undefined) {
+      data.questions = questions;
+      data.questionCount = questions.length;
     }
 
-    res.json({ success: true, updated: result.updated });
-  } catch (error) {
+    await prisma.questionnaire.update({ where: { id: req.params.id }, data });
+    res.json({ success: true, updated: 1 });
+  } catch (error: any) {
+    if (error.code === 'P2025') return res.status(404).json({ error: 'Questionnaire not found' });
     logger.error({ error }, 'Error updating questionnaire');
     res.status(500).json({ error: 'Internal server error' });
   }
@@ -157,62 +130,58 @@ router.put('/:id', async (req: AuthRequest, res: Response) => {
 // DELETE /api/questionnaires/:id
 router.delete('/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const result = await db.collection('questionnaires').doc(id).remove();
-
-    if (result.deleted === 0) {
-      return res.status(404).json({ error: 'Questionnaire not found' });
-    }
-
-    // Clean up related records
+    const id = req.params.id;
     await Promise.all([
-      db.collection('patient_tasks').where({ referenceId: id }).remove(),
-      db.collection('questionnaire_records').where({ questionnaireId: id }).remove(),
+      prisma.patientTask.deleteMany({ where: { referenceId: id } }),
+      prisma.questionnaireRecord.deleteMany({ where: { questionnaireId: id } }),
     ]);
-
-    res.json({ success: true, deleted: result.deleted });
-  } catch (error) {
+    await prisma.questionnaire.delete({ where: { id } });
+    res.json({ success: true, deleted: 1 });
+  } catch (error: any) {
+    if (error.code === 'P2025') return res.status(404).json({ error: 'Questionnaire not found' });
     logger.error({ error }, 'Error deleting questionnaire');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// POST /api/questionnaires/:id/distribute — send questionnaire to selected patients
+// POST /api/questionnaires/:id/distribute
 router.post('/:id/distribute', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const { patientIds } = req.body; // array of { id, name }
+    const { patientIds } = req.body;
 
     if (!Array.isArray(patientIds) || patientIds.length === 0) {
       return res.status(400).json({ error: 'patientIds is required' });
     }
 
-    // Verify questionnaire exists
-    const qResult = await db.collection('questionnaires').doc(id).get();
-    if (qResult.data.length === 0) {
-      return res.status(404).json({ error: 'Questionnaire not found' });
-    }
-    const questionnaire = qResult.data[0];
+    const questionnaire = await prisma.questionnaire.findUnique({ where: { id } });
+    if (!questionnaire) return res.status(404).json({ error: 'Questionnaire not found' });
 
-    // Create patient tasks in batch
-    const tasks = patientIds.map((p: { id: string; name: string }) => ({
-      patientId: p.id,
-      patientName: p.name,
-      taskType: 'questionnaire',
-      referenceId: id,
-      title: questionnaire.title,
-      status: 'pending',
-      createdAt: new Date().toISOString(),
-      doctorId: req.user?.id,
-      doctorName: req.user?.nickName,
-    }));
+    // Look up patient user IDs from openids
+    const patientUsers = await prisma.user.findMany({
+      where: { openid: { in: patientIds.map((p: any) => p.id) } },
+      select: { id: true, openid: true, nickName: true },
+    });
 
-    // CloudBase doesn't support batch add, so we add sequentially
-    await Promise.all(tasks.map((task: any) => db.collection('patient_tasks').add(task)));
+    const tasks = patientIds.map((p: { id: string; name: string }) => {
+      const patientUser = patientUsers.find(u => u.openid === p.id);
+      return {
+        patientId: patientUser?.id || p.id,
+        patientName: p.name,
+        taskType: 'questionnaire',
+        referenceId: id,
+        title: questionnaire.title,
+        status: 'pending',
+        doctorId: req.user!.id,
+        doctorName: req.user!.nickName,
+      };
+    });
 
-    // Increment usage count
-    await db.collection('questionnaires').doc(id).update({
-      usageCount: _.inc(patientIds.length)
+    await Promise.all(tasks.map((task: any) => prisma.patientTask.create({ data: task })));
+
+    await prisma.questionnaire.update({
+      where: { id },
+      data: { usageCount: { increment: patientIds.length } },
     });
 
     logger.info({ questionnaireId: id, patientCount: patientIds.length }, 'Distributed questionnaire');

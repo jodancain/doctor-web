@@ -1,5 +1,5 @@
 import { Router, Response } from 'express';
-import { db, _ } from '../db';
+import { prisma } from '../db';
 import { logger } from '../logger';
 import { requireAuth, requireDoctor, AuthRequest } from '../middleware/auth';
 
@@ -7,66 +7,47 @@ const router = Router();
 
 router.use(requireAuth, requireDoctor);
 
-// GET /api/messages/unread-count — total unread messages for this doctor
+// GET /api/messages/unread-count
 router.get('/unread-count', async (req: AuthRequest, res: Response) => {
   try {
-    const doctorId = req.user!.id;
-    const result = await db.collection('messages').where({
-      receiverId: doctorId,
-      senderRole: 'patient',
-      read: false,
-    }).count();
-
-    res.json({ unreadCount: result.total });
+    const unreadCount = await prisma.message.count({
+      where: { receiverId: req.user!.id, senderRole: 'patient', read: false },
+    });
+    res.json({ unreadCount });
   } catch (error) {
     logger.error({ error }, 'Error fetching unread count');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// GET /api/messages/conversations — list of conversations for this doctor
+// GET /api/messages/conversations
 router.get('/conversations', async (req: AuthRequest, res: Response) => {
   try {
     const doctorId = req.user!.id;
 
-    // Fetch all messages involving this doctor, sorted by time desc
-    const result = await db.collection('messages')
-      .where(_.or([
-        { senderId: doctorId },
-        { receiverId: doctorId },
-      ]))
-      .orderBy('createdAt', 'desc')
-      .limit(500)
-      .get();
+    const messages = await prisma.message.findMany({
+      where: { OR: [{ senderId: doctorId }, { receiverId: doctorId }] },
+      orderBy: { createdAt: 'desc' },
+      take: 500,
+    });
 
-    // Group by conversationId to build conversation list
-    const convMap = new Map<string, {
-      id: string;
-      patientId: string;
-      patientName: string;
-      patientAvatar?: string;
-      lastMessage: string;
-      lastMessageTime: number;
-      unreadCount: number;
-    }>();
+    // Group by conversationId
+    const convMap = new Map<string, any>();
 
-    for (const msg of result.data) {
-      const convId = msg.conversationId;
-      if (!convMap.has(convId)) {
-        // Determine patient info from message
+    for (const msg of messages) {
+      if (!convMap.has(msg.conversationId)) {
         const isFromPatient = msg.senderRole === 'patient';
-        convMap.set(convId, {
-          id: convId,
+        convMap.set(msg.conversationId, {
+          id: msg.conversationId,
           patientId: isFromPatient ? msg.senderId : msg.receiverId,
           patientName: isFromPatient ? msg.senderName : (msg.receiverName || '患者'),
-          lastMessage: msg.content,
-          lastMessageTime: msg.createdAt,
+          lastMessage: msg.content.substring(0, 100),
+          lastMessageTime: Number(msg.createdAt),
           unreadCount: 0,
         });
       }
 
-      // Count unread messages from patient
-      const conv = convMap.get(convId)!;
+      const conv = convMap.get(msg.conversationId)!;
       if (msg.senderRole === 'patient' && !msg.read && msg.receiverId === doctorId) {
         conv.unreadCount++;
       }
@@ -82,43 +63,32 @@ router.get('/conversations', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// GET /api/messages/:patientOpenid — get chat history with a patient
+// GET /api/messages/:patientOpenid
 router.get('/:patientOpenid', async (req: AuthRequest, res: Response) => {
   try {
-    const doctorId = req.user!.id;
-    const { patientOpenid } = req.params;
+    const conversationId = `${req.user!.id}_${req.params.patientOpenid}`;
     const limit = parseInt(req.query.limit as string) || 50;
     const before = parseInt(req.query.before as string) || Date.now();
 
-    const conversationId = `${doctorId}_${patientOpenid}`;
+    const messages = await prisma.message.findMany({
+      where: { conversationId, createdAt: { lt: BigInt(before) } },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
 
-    const result = await db.collection('messages')
-      .where({
-        conversationId,
-        createdAt: _.lt(before),
-      })
-      .orderBy('createdAt', 'desc')
-      .limit(limit)
-      .get();
-
-    // Return in chronological order
-    const items = result.data.reverse().map((msg: any) => ({
-      ...msg,
-      id: msg._id,
-    }));
-
-    res.json({ items, hasMore: result.data.length === limit });
+    const items = messages.reverse().map(msg => ({ ...msg, createdAt: Number(msg.createdAt) }));
+    res.json({ items, hasMore: messages.length === limit });
   } catch (error) {
     logger.error({ error }, 'Error fetching messages');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// POST /api/messages/:patientOpenid — doctor sends message to patient
+// POST /api/messages/:patientOpenid
 router.post('/:patientOpenid', async (req: AuthRequest, res: Response) => {
   try {
     const doctorId = req.user!.id;
-    const doctorName = req.user!.nickName;
+    const doctorName = req.user!.nickName || '';
     const { patientOpenid } = req.params;
     const { content, type = 'text' } = req.body;
     let { patientName } = req.body;
@@ -127,41 +97,30 @@ router.post('/:patientOpenid', async (req: AuthRequest, res: Response) => {
       return res.status(400).json({ error: 'Message content is required' });
     }
 
-    // Look up patient name from database if not provided
     if (!patientName) {
-      try {
-        const patientResult = await db.collection('users').where({ _openid: patientOpenid }).limit(1).get();
-        if (patientResult.data.length > 0) {
-          const patient = patientResult.data[0];
-          patientName = patient.nickName || patient.name || '患者';
-        }
-      } catch {
-        // Fallback to default
-      }
+      const patient = await prisma.user.findFirst({ where: { openid: patientOpenid } });
+      patientName = patient?.nickName || patient?.name || '患者';
     }
-    patientName = patientName || '患者';
 
     const conversationId = `${doctorId}_${patientOpenid}`;
-
-    const message = {
-      conversationId,
-      senderId: doctorId,
-      senderRole: 'doctor',
-      senderName: doctorName,
-      receiverId: patientOpenid,
-      receiverName: patientName,
-      content: content.trim(),
-      type,
-      createdAt: Date.now(),
-      read: false,
-    };
-
-    const result = await db.collection('messages').add(message);
+    const message = await prisma.message.create({
+      data: {
+        conversationId,
+        senderId: doctorId,
+        senderRole: 'doctor',
+        senderName: doctorName,
+        receiverId: patientOpenid,
+        receiverName: patientName,
+        content: content.trim(),
+        type,
+        createdAt: BigInt(Date.now()),
+      },
+    });
 
     res.status(201).json({
       success: true,
-      id: result.id,
-      message: { ...message, id: result.id },
+      id: message.id,
+      message: { ...message, createdAt: Number(message.createdAt) },
     });
   } catch (error) {
     logger.error({ error }, 'Error sending message');
@@ -169,21 +128,15 @@ router.post('/:patientOpenid', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// PUT /api/messages/:patientOpenid/read — mark messages as read
+// PUT /api/messages/:patientOpenid/read
 router.put('/:patientOpenid/read', async (req: AuthRequest, res: Response) => {
   try {
-    const doctorId = req.user!.id;
-    const { patientOpenid } = req.params;
-    const conversationId = `${doctorId}_${patientOpenid}`;
-
-    const result = await db.collection('messages').where({
-      conversationId,
-      senderRole: 'patient',
-      receiverId: doctorId,
-      read: false,
-    }).update({ read: true });
-
-    res.json({ success: true, updated: result.updated });
+    const conversationId = `${req.user!.id}_${req.params.patientOpenid}`;
+    const result = await prisma.message.updateMany({
+      where: { conversationId, senderRole: 'patient', receiverId: req.user!.id, read: false },
+      data: { read: true },
+    });
+    res.json({ success: true, updated: result.count });
   } catch (error) {
     logger.error({ error }, 'Error marking messages as read');
     res.status(500).json({ error: 'Internal server error' });

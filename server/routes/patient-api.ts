@@ -1,33 +1,31 @@
 import { Router, Response } from 'express';
-import { db, _ } from '../db';
+import { prisma } from '../db';
 import { logger } from '../logger';
 import { requireAuth, requirePatient, AuthRequest } from '../middleware/auth';
 
 const router = Router();
 
-// All patient-api routes require authenticated patient
 router.use(requireAuth, requirePatient);
 
-// Collection name mapping for health records
-const RECORD_COLLECTIONS: Record<string, string> = {
-  ua: 'uaRecords',
-  attack: 'attackRecords',
-  water: 'waterRecords',
-  exercise: 'exerciseRecords',
-  medication: 'medicationReminders',
-  diet: 'dietRecords',
+// Model mapping for health records
+const getRecordModel = (type: string) => {
+  const map: Record<string, any> = {
+    ua: prisma.uaRecord,
+    attack: prisma.attackRecord,
+    water: prisma.waterRecord,
+    exercise: prisma.exerciseRecord,
+    medication: prisma.medicationReminder,
+    diet: prisma.dietRecord,
+  };
+  return map[type];
 };
 
 // ─── Profile ────────────────────────────────────────────────────
 
-// GET /api/patient/me
 router.get('/me', async (req: AuthRequest, res: Response) => {
   try {
-    const result = await db.collection('users').doc(req.user!.id).get();
-    if (!result.data || result.data.length === 0) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-    const user = result.data[0];
+    const user = await prisma.user.findUnique({ where: { id: req.user!.id } });
+    if (!user) return res.status(404).json({ error: 'User not found' });
     const { password, ...safeUser } = user;
     return res.json(safeUser);
   } catch (error) {
@@ -38,95 +36,77 @@ router.get('/me', async (req: AuthRequest, res: Response) => {
 
 // ─── Health Records ─────────────────────────────────────────────
 
-// POST /api/patient/records/:type — submit a health record
 router.post('/records/:type', async (req: AuthRequest, res: Response) => {
   try {
-    const { type } = req.params;
-    const collection = RECORD_COLLECTIONS[type];
-    if (!collection) {
-      return res.status(400).json({ error: `Invalid record type: ${type}. Valid: ${Object.keys(RECORD_COLLECTIONS).join(', ')}` });
-    }
+    const model = getRecordModel(req.params.type);
+    if (!model) return res.status(400).json({ error: `Invalid record type: ${req.params.type}` });
 
     const openid = req.user!._openid;
-    if (!openid) {
-      return res.status(400).json({ error: 'Patient _openid not found' });
-    }
+    if (!openid) return res.status(400).json({ error: 'Patient _openid not found' });
 
-    const record = {
-      ...req.body,
-      _openid: openid,
-      timestamp: req.body.timestamp || Date.now(),
-      createdAt: Date.now(),
-    };
+    const { _id, ...data } = req.body;
+    const record = await model.create({
+      data: {
+        ...data,
+        openid,
+        timestamp: BigInt(data.timestamp || Date.now()),
+        createdAt: BigInt(Date.now()),
+      },
+    });
 
-    // Remove protected fields
-    delete record._id;
-
-    const result = await db.collection(collection).add(record);
-    logger.info({ type, openid }, 'Patient submitted health record');
-    return res.status(201).json({ success: true, id: result.id });
+    return res.status(201).json({ success: true, id: record.id });
   } catch (error) {
     logger.error({ error }, 'Error submitting health record');
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// GET /api/patient/records/:type — get own health records
 router.get('/records/:type', async (req: AuthRequest, res: Response) => {
   try {
-    const { type } = req.params;
-    const collection = RECORD_COLLECTIONS[type];
-    if (!collection) {
-      return res.status(400).json({ error: `Invalid record type: ${type}` });
-    }
+    const model = getRecordModel(req.params.type);
+    if (!model) return res.status(400).json({ error: `Invalid record type: ${req.params.type}` });
 
     const openid = req.user!._openid;
-    if (!openid) {
-      return res.status(400).json({ error: 'Patient _openid not found' });
-    }
+    if (!openid) return res.status(400).json({ error: 'Patient _openid not found' });
 
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = parseInt(req.query.offset as string) || 0;
 
-    const dataResult = await db.collection(collection)
-      .where({ _openid: openid })
-      .orderBy('timestamp', 'desc')
-      .skip(offset)
-      .limit(limit)
-      .get();
+    const items = await model.findMany({
+      where: { openid },
+      orderBy: { timestamp: 'desc' },
+      skip: offset,
+      take: limit,
+    });
 
-    return res.json({ items: dataResult.data, limit, offset });
+    return res.json({ items, limit, offset });
   } catch (error) {
     logger.error({ error }, 'Error fetching patient records');
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// GET /api/patient/summary — get own 7-day health summary
 router.get('/summary', async (req: AuthRequest, res: Response) => {
   try {
     const openid = req.user!._openid;
-    if (!openid) {
-      return res.status(400).json({ error: 'Patient _openid not found' });
-    }
+    if (!openid) return res.status(400).json({ error: 'Patient _openid not found' });
 
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const query = { _openid: openid };
+    const sevenDaysAgo = BigInt(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
     const [latestUa, attackCount, waterData, exerciseData, medsCount] = await Promise.all([
-      db.collection('uaRecords').where(query).orderBy('timestamp', 'desc').limit(1).get(),
-      db.collection('attackRecords').where(_.and([query, { timestamp: _.gte(sevenDaysAgo) }])).count(),
-      db.collection('waterRecords').where(_.and([query, { timestamp: _.gte(sevenDaysAgo) }])).get(),
-      db.collection('exerciseRecords').where(_.and([query, { timestamp: _.gte(sevenDaysAgo) }])).get(),
-      db.collection('medicationReminders').where(_.and([query, { timestamp: _.gte(sevenDaysAgo) }])).count(),
+      prisma.uaRecord.findFirst({ where: { openid }, orderBy: { timestamp: 'desc' } }),
+      prisma.attackRecord.count({ where: { openid, timestamp: { gte: sevenDaysAgo } } }),
+      prisma.waterRecord.findMany({ where: { openid, timestamp: { gte: sevenDaysAgo } } }),
+      prisma.exerciseRecord.findMany({ where: { openid, timestamp: { gte: sevenDaysAgo } } }),
+      prisma.medicationReminder.count({ where: { openid, timestamp: { gte: sevenDaysAgo } } }),
     ]);
 
     return res.json({
-      latestUa: latestUa.data[0]?.value || null,
-      recentAttacks: attackCount.total,
-      recentWaterTotal: waterData.data.reduce((sum: number, r: any) => sum + (r.amount || 0), 0),
-      recentExerciseTotal: exerciseData.data.reduce((sum: number, r: any) => sum + (r.duration || 0), 0),
-      recentMedsCount: medsCount.total,
+      latestUa: latestUa?.value || null,
+      recentAttacks: attackCount,
+      recentWaterTotal: waterData.reduce((sum, r) => sum + (r.amount || 0), 0),
+      recentExerciseTotal: exerciseData.reduce((sum, r) => sum + (r.duration || 0), 0),
+      recentMedsCount: medsCount,
     });
   } catch (error) {
     logger.error({ error }, 'Error fetching patient summary');
@@ -136,21 +116,13 @@ router.get('/summary', async (req: AuthRequest, res: Response) => {
 
 // ─── Questionnaire Tasks ────────────────────────────────────────
 
-// GET /api/patient/tasks — get assigned tasks
 router.get('/tasks', async (req: AuthRequest, res: Response) => {
   try {
-    const openid = req.user!._openid;
-    if (!openid) {
-      return res.status(400).json({ error: 'Patient _openid not found' });
-    }
-
-    const result = await db.collection('patient_tasks')
-      .where({ patientId: openid })
-      .orderBy('createdAt', 'desc')
-      .limit(50)
-      .get();
-
-    const items = result.data.map((item: any) => ({ ...item, id: item._id }));
+    const items = await prisma.patientTask.findMany({
+      where: { patientId: req.user!.id },
+      orderBy: { createdAt: 'desc' },
+      take: 50,
+    });
     return res.json({ items });
   } catch (error) {
     logger.error({ error }, 'Error fetching patient tasks');
@@ -158,76 +130,49 @@ router.get('/tasks', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// GET /api/patient/questionnaires/:id — get questionnaire template to fill
 router.get('/questionnaires/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const result = await db.collection('questionnaires').doc(id).get();
-
-    if (result.data.length === 0) {
-      return res.status(404).json({ error: 'Questionnaire not found' });
-    }
-
-    const q = result.data[0];
-    if (q.status !== 'Published') {
-      return res.status(403).json({ error: 'Questionnaire is not published' });
-    }
-
-    return res.json({ ...q, id: q._id });
+    const q = await prisma.questionnaire.findUnique({ where: { id: req.params.id } });
+    if (!q) return res.status(404).json({ error: 'Questionnaire not found' });
+    if (q.status !== 'Published') return res.status(403).json({ error: 'Questionnaire is not published' });
+    return res.json(q);
   } catch (error) {
     logger.error({ error }, 'Error fetching questionnaire');
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// POST /api/patient/questionnaires/:id/submit — submit questionnaire answers
 router.post('/questionnaires/:id/submit', async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
-    const openid = req.user!._openid;
-    const patientName = req.user!.nickName;
 
-    if (!openid) {
-      return res.status(400).json({ error: 'Patient _openid not found' });
-    }
-
-    // Verify questionnaire exists
-    const qResult = await db.collection('questionnaires').doc(id).get();
-    if (qResult.data.length === 0) {
-      return res.status(404).json({ error: 'Questionnaire not found' });
-    }
-    const questionnaire = qResult.data[0];
+    const questionnaire = await prisma.questionnaire.findUnique({ where: { id } });
+    if (!questionnaire) return res.status(404).json({ error: 'Questionnaire not found' });
 
     const { answers, score, result: resultText } = req.body;
 
-    // Create questionnaire record
-    const record = {
-      questionnaireId: id,
-      questionnaireName: questionnaire.title,
-      patientName: patientName,
-      patientId: openid,
-      submitDate: new Date().toISOString().replace('T', ' ').substring(0, 16),
-      score: score || null,
-      result: resultText || '',
-      status: 'Completed',
-      answers: answers || [],
-      createdAt: Date.now(),
-    };
-
-    const recordResult = await db.collection('questionnaire_records').add(record);
-
-    // Update patient_task status to completed
-    await db.collection('patient_tasks').where({
-      patientId: openid,
-      referenceId: id,
-      status: 'pending',
-    }).update({
-      status: 'completed',
-      completedAt: new Date().toISOString(),
+    const record = await prisma.questionnaireRecord.create({
+      data: {
+        questionnaireId: id,
+        questionnaireName: questionnaire.title,
+        patientId: req.user!._openid || req.user!.id,
+        patientName: req.user!.nickName || '',
+        submitDate: new Date().toISOString().replace('T', ' ').substring(0, 16),
+        score: score || null,
+        result: resultText || '',
+        status: 'Completed',
+        answers: answers || [],
+        createdAt: BigInt(Date.now()),
+      },
     });
 
-    logger.info({ questionnaireId: id, patientId: openid }, 'Patient submitted questionnaire');
-    return res.status(201).json({ success: true, id: recordResult.id });
+    // Update task status
+    await prisma.patientTask.updateMany({
+      where: { patientId: req.user!.id, referenceId: id, status: 'pending' },
+      data: { status: 'completed', completedAt: new Date() },
+    });
+
+    return res.status(201).json({ success: true, id: record.id });
   } catch (error) {
     logger.error({ error }, 'Error submitting questionnaire');
     return res.status(500).json({ error: 'Internal server error' });
@@ -236,25 +181,20 @@ router.post('/questionnaires/:id/submit', async (req: AuthRequest, res: Response
 
 // ─── Messages ───────────────────────────────────────────────────
 
-// GET /api/patient/messages — get chat messages with doctor
 router.get('/messages', async (req: AuthRequest, res: Response) => {
   try {
     const openid = req.user!._openid;
-    if (!openid) {
-      return res.status(400).json({ error: 'Patient _openid not found' });
-    }
+    if (!openid) return res.status(400).json({ error: 'Patient _openid not found' });
 
     const limit = parseInt(req.query.limit as string) || 50;
-    // Find conversations that end with this patient's openid
-    const convRegex = db.RegExp({ regexp: `_${openid}$` });
 
-    const result = await db.collection('messages')
-      .where({ conversationId: convRegex })
-      .orderBy('createdAt', 'desc')
-      .limit(limit)
-      .get();
+    const messages = await prisma.message.findMany({
+      where: { OR: [{ senderId: openid }, { receiverId: openid }] },
+      orderBy: { createdAt: 'desc' },
+      take: limit,
+    });
 
-    const items = result.data.reverse().map((msg: any) => ({ ...msg, id: msg._id }));
+    const items = messages.reverse().map(msg => ({ ...msg, createdAt: Number(msg.createdAt) }));
     return res.json({ items });
   } catch (error) {
     logger.error({ error }, 'Error fetching patient messages');
@@ -262,139 +202,97 @@ router.get('/messages', async (req: AuthRequest, res: Response) => {
   }
 });
 
-// POST /api/patient/messages — send message to doctor
 router.post('/messages', async (req: AuthRequest, res: Response) => {
   try {
     const openid = req.user!._openid;
-    const patientName = req.user!.nickName;
-
-    if (!openid) {
-      return res.status(400).json({ error: 'Patient _openid not found' });
-    }
+    if (!openid) return res.status(400).json({ error: 'Patient _openid not found' });
 
     const { content } = req.body;
-    if (!content || !content.trim()) {
-      return res.status(400).json({ error: 'Message content is required' });
-    }
+    if (!content?.trim()) return res.status(400).json({ error: 'Message content is required' });
 
-    // Find existing conversation to get doctorId
-    const convRegex = db.RegExp({ regexp: `_${openid}$` });
-    const existingMsg = await db.collection('messages')
-      .where({ conversationId: convRegex })
-      .limit(1)
-      .get();
+    // Find existing conversation
+    const existing = await prisma.message.findFirst({
+      where: { OR: [{ senderId: openid }, { receiverId: openid }] },
+      orderBy: { createdAt: 'desc' },
+    });
 
-    if (existingMsg.data.length === 0) {
+    if (!existing) {
       return res.status(400).json({ error: '暂无与医生的会话，请等待医生先发起对话' });
     }
 
-    const conversationId = existingMsg.data[0].conversationId;
-    // Extract doctorId from conversationId (format: doctorId_patientOpenid)
-    const doctorId = conversationId.replace(`_${openid}`, '');
+    const conversationId = existing.conversationId;
+    const doctorId = conversationId.split('_')[0];
 
-    const message = {
-      conversationId,
-      senderId: openid,
-      senderRole: 'patient',
-      senderName: patientName,
-      receiverId: doctorId,
-      receiverName: existingMsg.data[0].senderRole === 'doctor'
-        ? existingMsg.data[0].senderName
-        : existingMsg.data[0].receiverName,
-      content: content.trim(),
-      type: 'text',
-      createdAt: Date.now(),
-      read: false,
-    };
+    const message = await prisma.message.create({
+      data: {
+        conversationId,
+        senderId: openid,
+        senderRole: 'patient',
+        senderName: req.user!.nickName || '',
+        receiverId: doctorId,
+        receiverName: '',
+        content: content.trim(),
+        type: 'text',
+        createdAt: BigInt(Date.now()),
+      },
+    });
 
-    const result = await db.collection('messages').add(message);
-    return res.status(201).json({ success: true, id: result.id, message: { ...message, id: result.id } });
+    return res.status(201).json({ success: true, id: message.id, message: { ...message, createdAt: Number(message.createdAt) } });
   } catch (error) {
     logger.error({ error }, 'Error sending patient message');
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// PUT /api/patient/messages/read — mark doctor messages as read
 router.put('/messages/read', async (req: AuthRequest, res: Response) => {
   try {
     const openid = req.user!._openid;
-    if (!openid) {
-      return res.status(400).json({ error: 'Patient _openid not found' });
-    }
+    if (!openid) return res.status(400).json({ error: 'Patient _openid not found' });
 
-    const convRegex = db.RegExp({ regexp: `_${openid}$` });
-    const result = await db.collection('messages').where({
-      conversationId: convRegex,
-      senderRole: 'doctor',
-      read: false,
-    }).update({ read: true });
+    const result = await prisma.message.updateMany({
+      where: { receiverId: openid, senderRole: 'doctor', read: false },
+      data: { read: true },
+    });
 
-    return res.json({ success: true, updated: result.updated });
+    return res.json({ success: true, updated: result.count });
   } catch (error) {
     logger.error({ error }, 'Error marking messages as read');
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// ─── Education Articles (read-only) ─────────────────────────────
+// ─── Education Articles ─────────────────────────────────────────
 
-// GET /api/patient/articles — get published articles
 router.get('/articles', async (req: AuthRequest, res: Response) => {
   try {
     const limit = parseInt(req.query.limit as string) || 20;
     const offset = parseInt(req.query.offset as string) || 0;
     const category = req.query.category as string;
 
-    let query: any = { status: '已发布' };
-    if (category && category !== '全部') {
-      query.category = category;
-    }
+    const where: any = { status: '已发布' };
+    if (category && category !== '全部') where.category = category;
 
-    const [countResult, dataResult] = await Promise.all([
-      db.collection('education_articles').where(query).count(),
-      db.collection('education_articles')
-        .where(query)
-        .skip(offset)
-        .limit(limit)
-        .orderBy('createdAt', 'desc')
-        .get()
+    const [total, data] = await Promise.all([
+      prisma.educationArticle.count({ where }),
+      prisma.educationArticle.findMany({ where, skip: offset, take: limit, orderBy: { createdAt: 'desc' } }),
     ]);
 
-    const items = dataResult.data.map((item: any) => ({
-      ...item,
-      id: item._id,
-      createdAt: item.createdAt?.$date || item.createdAt,
-    }));
-
-    return res.json({ items, total: countResult.total, limit, offset });
+    return res.json({ items: data, total, limit, offset });
   } catch (error) {
-    logger.error({ error }, 'Error fetching articles for patient');
+    logger.error({ error }, 'Error fetching articles');
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
 
-// GET /api/patient/articles/:id — get single article
 router.get('/articles/:id', async (req: AuthRequest, res: Response) => {
   try {
-    const { id } = req.params;
-    const result = await db.collection('education_articles').doc(id).get();
+    const article = await prisma.educationArticle.findUnique({ where: { id: req.params.id } });
+    if (!article || article.status !== '已发布') return res.status(404).json({ error: 'Article not found' });
 
-    if (result.data.length === 0) {
-      return res.status(404).json({ error: 'Article not found' });
-    }
-
-    const article = result.data[0];
-    if (article.status !== '已发布') {
-      return res.status(404).json({ error: 'Article not found' });
-    }
-
-    // Increment view count
-    await db.collection('education_articles').doc(id).update({ views: _.inc(1) });
-
-    return res.json({ ...article, id: article._id });
+    await prisma.educationArticle.update({ where: { id: req.params.id }, data: { views: { increment: 1 } } });
+    return res.json(article);
   } catch (error) {
-    logger.error({ error }, 'Error fetching article for patient');
+    logger.error({ error }, 'Error fetching article');
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
