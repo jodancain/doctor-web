@@ -13,11 +13,12 @@ RUN npm ci
 # 复制所有源代码
 COPY . .
 
-# 构建前端静态文件 (Vite build)
-RUN npm run build
+# 生成 Prisma Client + 构建前端
+RUN npx prisma generate && npm run build
 
 # 暴露 3000 端口
 EXPOSE 3000
 
-# 启动 Express 服务器
+# 生产环境启动
+ENV NODE_ENV=production
 CMD ["npm", "start"]
