@@ -6,6 +6,8 @@
 
 import { AIProvider } from './ai-provider';
 import { YuanqiProvider } from './providers/yuanqi';
+import { ClaudeProvider } from './providers/claude';
+import { OpenAIProvider } from './providers/openai';
 import { logger } from '../logger';
 
 class AIProviderRegistry {
@@ -61,11 +63,5 @@ export const providerRegistry = new AIProviderRegistry();
 
 // 自动注册内置 Provider
 providerRegistry.register(new YuanqiProvider());
-
-// 预留：当配置了 CLAUDE_API_KEY 时自动注册
-// import { ClaudeProvider } from './providers/claude';
-// if (process.env.CLAUDE_API_KEY) providerRegistry.register(new ClaudeProvider());
-
-// 预留：当配置了 OPENAI_API_KEY 时自动注册
-// import { OpenAIProvider } from './providers/openai';
-// if (process.env.OPENAI_API_KEY) providerRegistry.register(new OpenAIProvider());
+providerRegistry.register(new ClaudeProvider());
+providerRegistry.register(new OpenAIProvider());
